@@ -56,12 +56,12 @@ const starterAdmins = [
 ];
 
 const donateDefault = [
-  { type:'Araba', items:['Mercedes S63 AMG','BMW X6 M','Audi RS7','Range Rover Sport','Porsche Panamera'] },
-  { type:'Ev', items:['Boğaz Villa','Şehir Dairesi','Lüks Rezidans','Garajlı Malikane'] },
-  { type:'Motor', items:['Yamaha R1','Ducati Panigale','BMW S1000RR','Harley Custom'] },
-  { type:'Boy', items:['Karakter boy paketi','Özel vücut ayarı','VIP görünüm'] },
-  { type:'Ped', items:['Özel Ped 1','Özel Ped 2','Özel kıyafet paketi'] },
-  { type:'Özel Paket', items:['Diamond VIP','Founder Destek','İşletme Paketi','Aile Paketi'] }
+  { type:'Araba', items:['Mercedes S63 AMG','BMW X6 M','Audi RS7','Range Rover Sport','Porsche Panamera'], images:['','','',''] },
+  { type:'Ev', items:['Boğaz Villa','Şehir Dairesi','Lüks Rezidans','Garajlı Malikane'], images:['','','',''] },
+  { type:'Motor', items:['Yamaha R1','Ducati Panigale','BMW S1000RR','Harley Custom'], images:['','','',''] },
+  { type:'Boy', items:['Karakter boy paketi','Özel vücut ayarı','VIP görünüm'], images:['','','',''] },
+  { type:'Ped', items:['Özel Ped 1','Özel Ped 2','Özel kıyafet paketi'], images:['','','',''] },
+  { type:'Özel Paket', items:['Diamond VIP','Founder Destek','İşletme Paketi','Aile Paketi'], images:['','','',''] }
 ];
 
 const staffRankOrder = {
@@ -334,7 +334,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   setPunish({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
  }
  function finishPunishment(id){const p=punishments.find(x=>x.id===id);setPunishments(all=>all.map(x=>x.id===id?{...x,status:'Bitti'}:x));if(p?.targetType==='Oyuncu')setPlayers(all=>all.map(x=>String(x.discordId)===String(p.targetId)?{...x,wlStatus:'Aktif',wlEndDate:'',banReason:''}:x));sendDiscordLog('Ceza Bitti / WL Geri Verildi',`${p?.targetId} için ceza bitirildi.`)}
- function saveDonate(){setDonate(p=>p.map(d=>d.type===editDonate.type?editDonate:d));setEditDonate(null)}
+ function saveDonate(){setDonate(p=>p.map(d=>d.type===editDonate.type?{...editDonate,images:(editDonate.images||[]).slice(0,4)}:d));setEditDonate(null)}
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
 
  return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
@@ -359,9 +359,13 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 </div></div>)}</Card>}
   {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>Ver Komutu</Button><Button variant="ghost" onClick={()=>copyText(wlRemoveCommand(p))}>Kaldır Komutu</Button></div></div>)}</Card>}
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
-  {active==='Donate Market'&&<Card className="panel"><h2>Donate Yönetimi</h2>{donate.map(d=><div className="row" key={d.type}><div><b>{d.type}</b><p>{d.items.join(' • ')}</p></div><Button onClick={()=>setEditDonate({...d})}>Düzenle</Button></div>)}</Card>}
+  {active==='Donate Market'&&<Card className="panel"><h2>Donate Yönetimi</h2>{donate.map(d=><div className="row" key={d.type}><div><b>{d.type}</b><p>{d.items.join(' • ')}</p><small>{(d.images||[]).filter(Boolean).length} / 4 fotoğraf</small></div><Button onClick={()=>setEditDonate({...d,images:d.images||['','','','']})}>Düzenle</Button></div>)}</Card>}
   {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
-  {editDonate&&<div className="modal"><Card className="modalCard"><h2>{editDonate.type} Düzenle</h2><TextArea value={editDonate.items.join(', ')} onChange={v=>setEditDonate({...editDonate,items:v.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Ürünler"/><div className="actions"><Button onClick={saveDonate}>Kaydet</Button><Button variant="ghost" onClick={()=>setEditDonate(null)}>Kapat</Button></div></Card></div>}
+  {editDonate&&<div className="modal"><Card className="modalCard"><h2>{editDonate.type} Düzenle</h2><TextArea value={editDonate.items.join(', ')} onChange={v=>setEditDonate({...editDonate,items:v.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Ürünler"/>
+  <h3>Donate Fotoğrafları</h3>
+  <p className="muted">Her kategori için en fazla 4 fotoğraf linki ekleyebilirsin. Örnek: /images/araba1.png veya https://...</p>
+  {[0,1,2,3].map(i=><Field key={i} value={(editDonate.images||['','','',''])[i]||''} onChange={v=>{const imgs=[...(editDonate.images||['','','',''])];imgs[i]=v;setEditDonate({...editDonate,images:imgs})}} placeholder={`Fotoğraf ${i+1} linki`}/>)}
+  <div className="actions"><Button onClick={saveDonate}>Kaydet</Button><Button variant="ghost" onClick={()=>setEditDonate(null)}>Kapat</Button></div></Card></div>}
  </main></div>
 }
 
@@ -369,13 +373,19 @@ function App(){
  const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
  const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v16')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
- const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v10')||'null')||donateDefault);
+ const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v11')||'null')||donateDefault);
  const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v16')||'null')||staffRanksDefault);
  const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v16')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
+
+ useEffect(()=>{
+  localStorage.setItem('YER6_DONATE_IMAGES_V11','1');
+  setDonate(prev=>(prev&&prev.length?prev:donateDefault).map(d=>({...d,images:(d.images||['','','','']).slice(0,4)})));
+ },[]);
+
 
  useEffect(()=>{
   localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V16','1');
@@ -394,7 +404,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v10',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v11',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
  function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}

@@ -236,3 +236,46 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* =========================================================
+   YER6 DONATE MARKET FOTO FIX
+   Her donate kartında 4 fotoğraf desteği.
+   ========================================================= */
+
+.donateCard{
+  overflow:hidden;
+}
+
+.donatePhotos{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin-bottom:16px;
+}
+
+.donatePhotos img{
+  width:100%;
+  height:115px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid rgba(240,20,39,.28);
+  background:#05070a;
+  display:block;
+}
+
+.modalCard h3{
+  margin:16px 0 8px;
+}
+
+.muted{
+  color:#aaa;
+  font-size:14px;
+  line-height:1.5;
+}
+
+@media(max-width:700px){
+  .donatePhotos img{
+    height:140px;
+  }
+}
