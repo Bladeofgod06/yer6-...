@@ -6,23 +6,41 @@ import './style.css';
 
 const rules = [["Ailevi Değerlere Küfür (ADK)", "3 Gün WL", "Ağır", "Saygı"], ["Aktif Rolde Desteğe Çıkmak", "4x Uyarı", "Orta", "Destek"], ["Aile Kıyafet Kurallarına Uymamak / Claimsiz Gezmek", "3x Uyarı", "Orta", "Aile"], ["Başka Ailenin Claimini Kullanmak", "1 Gün WL", "Ağır", "Aile"], ["Badcop (BC)", "2 Gün WL + İhraç + CK", "Ağır", "Devlet"], ["Bug Abuse", "3 Gün WL", "Ağır", "Abuse"], ["Pit Demirsiz Araçla Pit Atmak", "4x Uyarı", "Orta", "Araç"], ["Polisin 5 Dakika Dolmadan Pit Atması", "3x Uyarı", "Orta", "Polis"], ["Polis Bayıltma / Öldürme Durumlarında Pit Kuralı Geçersizdir", "Bilgilendirme", "Not", "Polis"], ["Polis Kıyafeti Giymek (Sivil)", "3 Gün WL", "Ağır", "Devlet"], ["Power Gaming", "1 Gün WL", "Ağır", "RP"], ["Polis Soymak / Teçhizatlarını Almak / Legal Itemleri Almak veya Kullanmak", "4x Uyarı", "Orta", "Devlet"], ["RDM", "1 Gün WL", "Ağır", "Combat"], ["Refuse RP", "1 Gün WL", "Ağır", "RP"], ["Retarded RP", "3x Uyarı", "Orta", "RP"], ["Revenge Kill", "1 Gün WL", "Ağır", "Combat"], ["Rol Baltalama", "1 Gün WL", "Ağır", "RP"], ["Rol Block Uymamak", "1 Gün WL", "Ağır", "RP"], ["Rol Check", "1 Gün WL", "Ağır", "RP"], ["Rol Clear'ı Hatırlamak", "1 Gün WL", "Ağır", "RP"], ["Rolde OOC Konuşmak", "4x Uyarı", "Orta", "OOC"], ["Sincap, 3 Bacaklı, Travesti vb. saçma hitaplarla rol baltalamak", "5 Gün WL", "Ağır", "Saygı"], ["Sarı Sayfalarda 30 Dakika Geçmeden İlan Atmak", "1x Uyarı", "Hafif", "Sarı Sayfa"], ["Sağlık Çalışanına Fiziksel Şiddet / Rehin Almak", "4x Uyarı", "Orta", "EMS"], ["SS Dışında Adam Soymak", "4x Uyarı", "Orta", "Soygun"], ["Soygunda Polis Gelmeden Gitmek (ATM/Ev Hariç)", "4x Uyarı", "Orta", "Soygun"], ["Sunucuya Küfür", "PERMA", "Perma", "Saygı"], ["Tehdit / Şantaj / Data Sorgusu / Sanal Mafyacılık / Panel Muhabbetleri", "PERMA", "Perma", "Saygı"], ["Triggerlamak", "1 Gün WL", "Ağır", "RP"], ["Üniformalı Polisi 30+ Dakika Esir Tutmak", "3x Uyarı", "Orta", "Devlet"], ["VDM", "1 Gün WL", "Ağır", "Combat"], ["Araçtaki silahsız ve zor durumdaki kişi 1 kez araçla çarpıp kaçabilir", "VDM Sayılmaz", "Not", "Combat"], ["Yanlış /ME ve /DO Kullanımı", "3x Uyarı", "Orta", "Komut"], ["Yayıncıları Ghostlamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yayıncının Yayınını Baltalamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yetkiliyi Kandırmak", "2 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Ağır Hakaret", "4 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Hakaret", "1 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye “Melek” vb. Demek", "4x Uyarı", "Orta", "Yetkili"], ["WL Cezası Varken Oyuna Girmek / Quit Atıp Geri Sunucuya Girmek", "1 Gün WL", "Ağır", "WL"], ["Uyarılar 2 Haftada 1 Silinmektedir", "Not", "Not", "Notlar"], ["5x Uyarı 1 Gün WL'ye Dönüşür", "Not", "Not", "Notlar"], ["Kaliteli rol deneyimi için kurallar sıkı hale getirilmiştir", "İyi Roller", "Not", "Notlar"], ["Combatlog", "2 Gün WL + Envanter SİLİNECEK", "Ağır", "Combat"], ["Combatlog Timeout / Crash Durumu", "Kayıtlı kanıtlı şekilde destekte sunulmalıdır", "Not", "Combat"], ["Crash-bildirip geri role giremeyecek durumlar kanıtlı sunulmalıdır", "Not", "Not", "Combat"], ["Copbait (Normal)", "3x Uyarı", "Orta", "Polis"], ["Copbait (Rol Baltalama)", "2 Gün WL", "Ağır", "Polis"], ["Destekte Yetkiliye Saygısızlık/Küfür", "1 Gün WL", "Ağır", "Destek"], ["Destekte Karşı Tarafa Saygısızlık", "3x Uyarı", "Orta", "Destek"], ["Dini Değerlere Küfür (DDK)", "PERMA", "Perma", "Saygı"], ["Donate Araç/Motor ile Soygun Yapmak", "2x Uyarı", "Orta", "Donate"], ["Dolandırıcılık Rolü", "4x Uyarı", "Orta", "Rol"], ["Dupe (Eşya / Silah Çoğaltma)", "PERMA", "Perma", "Abuse"], ["Etkinlik Baltalamak", "4x Uyarı + Kick + Devamında 1 Gün WL", "Ağır", "Etkinlik"], ["Fail RP", "4x Uyarı", "Orta", "RP"], ["Fear RP", "4x Uyarı", "Orta", "RP"], ["Force RP", "4x Uyarı", "Orta", "RP"], ["Gang Up", "1 Gün WL", "Ağır", "İllegal"], ["Gang Up Açıklaması", "Ailelerde illegal kurallara bakılır. Sivilde en fazla 5 kişi birlikte rol yapabilir.", "Not", "İllegal"], ["6. kişi girdiğinde kişisel Gang Up işlemi uygulanır", "Not", "Not", "İllegal"], ["Gereksiz Agresif Başlatmak / Devam Ettirmek", "4x Uyarı", "Orta", "Agresif"], ["Güvenli Bölgede Adam Kaçırmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölge dışındaki rolü güvenli bölgede devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli bölgede küfürleşmek, sövüşmek, agresifi devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölgeye Dışarıdan Ateş Etmek", "1 Gün WL", "Ağır", "Güvenli Bölge"], ["Güvenli Bölgede Agresif Rol Başlatmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Hile / 3. Parti Yazılım Kullanımı", "PERMA", "Perma", "Hile"], ["IC/OOC Mixing", "1 Gün WL", "Ağır", "OOC"], ["IC/OOC Mixing Açıklaması", "Discord kanalları veya IC olarak sunucu içinde yapılan OOC konuşmalar işlem sebebidir", "Not", "OOC"], ["ILLEGAL RPF 1. Tespit", "Sözlü Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 2. Tespit", "1x İllegal Uyarı + 3x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 3. Tespit", "2x İllegal Uyarı + 4x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 4. Tespit", "PERMA BAN", "İllegal RPF", "İllegal RPF"], ["İllegal/Legal Yasağı Kuralını Çiğnemek", "1 Gün WL", "Ağır", "İllegal"], ["İzinsiz “E” Çekmek", "3x Uyarı", "Orta", "İllegal"], ["İzinsiz ERP", "1 Gün WL", "Ağır", "Rol"], ["İzinsiz Soygun (Banka / Kuyumcu)", "1 Gün WL", "Ağır", "Soygun"], ["Kadın Oyuncuya Cinsel Hakaret", "2 Gün WL", "Ağır", "Saygı"], ["Kadın Oyuncuya Taciz", "PERMA", "Perma", "Saygı"], ["Kamu Alanında Triggerlamak", "3x Uyarı", "Orta", "RP"], ["Kaza Rolüne Girmemek", "3x Uyarı", "Orta", "Araç"], ["Kenevir/Meth Bölgesine Siren Açıp Girmek", "4x Uyarı", "Orta", "İllegal"], ["Low RP", "2 Gün WL", "Ağır", "RP"], ["Maskesiz Soygun", "2x Uyarı", "Orta", "Soygun"], ["Meta Gaming", "2 Gün WL", "Ağır", "RP"], ["Milli Değerlere Küfür (MDK)", "PERMA", "Perma", "Saygı"], ["NLR (New Life Rule)", "1 Gün WL", "Ağır", "RP"], ["NLR Açıklaması", "CK yedikten sonra önceki hayatını hatırlamak yasaktır", "Not", "RP"], ["Non-RP Driving", "4x Uyarı", "Orta", "Araç"], ["OOC Kin", "4x Uyarı", "Orta", "OOC"], ["Devlet Araçlarını Çalmak", "3x Uyarı", "Orta", "Devlet"], ["Devlet Araçları Açıklaması", "Polis, Ambulans ve Adalet Bakanlığı araçlarını çalmak yasaktır", "Not", "Devlet"]].map(([name, penalty, level, category], id) => ({ id: id + 1, name, penalty, level, category }));
 const staffRanksDefault = [
- { level: 1, rank: "Trial Admin" },
- { level: 2, rank: "Lead Admin" },
- { level: 3, rank: "Senior Manager" },
- { level: 4, rank: "Head Manager" },
- { level: 5, rank: "Head Master" },
- { level: 6, rank: "Web Developer" },
- { level: 7, rank: "Co-Founder" },
- { level: 8, rank: "Founder" }
+ { level: 1, rank: "Staff 1" },
+ { level: 2, rank: "Staff 2" },
+ { level: 3, rank: "Staff 3" },
+ { level: 4, rank: "Staff 4" },
+ { level: 5, rank: "Staff 5" },
+ { level: 6, rank: "Head Staff" },
+ { level: 7, rank: "Guide Staff" },
+ { level: 8, rank: "General Staff" },
+ { level: 9, rank: "Moderatör" },
+ { level: 10, rank: "Head Moderatör" },
+ { level: 11, rank: "Trial Admin" },
+ { level: 12, rank: "Lead Admin" },
+ { level: 13, rank: "Senior Admin" },
+ { level: 14, rank: "General Admin" },
+ { level: 15, rank: "Head Admin" },
+ { level: 16, rank: "Senior Manager" },
+ { level: 17, rank: "Head Manager" },
+ { level: 18, rank: "Head Master" },
+ { level: 19, rank: "Web Developer" },
+ { level: 20, rank: "Head Of Management" },
+ { level: 21, rank: "Co-Founder" },
+ { level: 22, rank: "Founder" }
 ];
 
 const staffMembersDefault = [
   { name:'Founder 1', discordId:'founder1', rank:'Founder', duty:'Kurucu', status:'Aktif', image:'' },
   { name:'Founder 2', discordId:'founder2', rank:'Founder', duty:'Kurucu', status:'Aktif', image:'' },
   { name:'Co-Founder', discordId:'cofounder', rank:'Co-Founder', duty:'Kurucu Yardımcısı', status:'Aktif', image:'' },
+  { name:'Head Of Management', discordId:'headofmanagement', rank:'Head Of Management', duty:'Üst Yönetim Sorumlusu', status:'Aktif', image:'' },
   { name:'Head Master', discordId:'headmaster', rank:'Head Master', duty:'Üst Yönetim Lideri', status:'Aktif', image:'' },
   { name:'Head Manager', discordId:'headmanager', rank:'Head Manager', duty:'Yönetim Sorumlusu', status:'Aktif', image:'' },
   { name:'Senior Manager', discordId:'seniormanager', rank:'Senior Manager', duty:'Kıdemli Yönetici', status:'Aktif', image:'' },
+  { name:'Head Admin', discordId:'headadmin', rank:'Head Admin', duty:'Admin Ekibi Sorumlusu', status:'Aktif', image:'' },
+  { name:'General Admin', discordId:'generaladmin', rank:'General Admin', duty:'Genel Admin', status:'Aktif', image:'' },
+  { name:'Senior Admin', discordId:'senioradmin', rank:'Senior Admin', duty:'Kıdemli Admin', status:'Aktif', image:'' },
   { name:'Lead Admin', discordId:'leadadmin', rank:'Lead Admin', duty:'Admin Lideri', status:'Aktif', image:'' },
   { name:'Arda', discordId:'1144954440667910155', rank:'Web Developer', duty:'Website Developer', status:'Aktif', image:'' }
 ];
@@ -30,11 +48,11 @@ const staffMembersDefault = [
 const photos = ["yer6-main-hero.png","hero.jpg","yer6-photo-1.jpg","yer6-photo-2.jpg","yer6-photo-3.jpg","yer6-photo-4.jpg","yer6-photo-5.jpg","yer6-photo-6.jpg","yer6-photo-7.jpg","yer6-photo-8.jpg"];
 
 const starterAdmins = [
-  { username:'Founder 1', password:'123456', discordId:'founder1', role:'Founder', level:8 },
-  { username:'Founder 2', password:'123456', discordId:'founder2', role:'Founder', level:8 },
-  { username:'Co-Founder', password:'123456', discordId:'cofounder', role:'Co-Founder', level:7 },
-  { username:'Head Master', password:'123456', discordId:'headmaster', role:'Head Master', level:5 },
-  { username:'Arda', password:'Arda1234', discordId:'1144954440667910155', role:'Web Developer', level:6 }
+  { username:'Founder 1', password:'123456', discordId:'founder1', role:'Founder', level:22 },
+  { username:'Founder 2', password:'123456', discordId:'founder2', role:'Founder', level:22 },
+  { username:'Co-Founder', password:'123456', discordId:'cofounder', role:'Co-Founder', level:21 },
+  { username:'Head Master', password:'123456', discordId:'headmaster', role:'Head Master', level:18 },
+  { username:'Arda', password:'Arda1234', discordId:'1144954440667910155', role:'Web Developer', level:19 }
 ];
 
 const donateDefault = [
@@ -47,14 +65,28 @@ const donateDefault = [
 ];
 
 const staffRankOrder = {
-  "Founder": 8,
-  "Co-Founder": 7,
-  "Web Developer": 6,
-  "Head Master": 5,
-  "Head Manager": 4,
-  "Senior Manager": 3,
-  "Lead Admin": 2,
-  "Trial Admin": 1
+  "Founder": 22,
+  "Co-Founder": 21,
+  "Head Of Management": 20,
+  "Web Developer": 19,
+  "Head Master": 18,
+  "Head Manager": 17,
+  "Senior Manager": 16,
+  "Head Admin": 15,
+  "General Admin": 14,
+  "Senior Admin": 13,
+  "Lead Admin": 12,
+  "Trial Admin": 11,
+  "Head Moderatör": 10,
+  "Moderatör": 9,
+  "General Staff": 8,
+  "Guide Staff": 7,
+  "Head Staff": 6,
+  "Staff 5": 5,
+  "Staff 4": 4,
+  "Staff 3": 3,
+  "Staff 2": 2,
+  "Staff 1": 1
 };
 
 function getStaffLevel(rank) {
@@ -308,8 +340,8 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Users/><div><span>Oyuncu</span><b>{players.length}</b></div></Card><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishments.length}</b></div></Card><Card className="stat"><Ticket/><div><span>Destek</span><b>{tickets.length}</b></div></Card></div>}
   {active==='Oyuncular'&&<Card className="panel"><h2>Oyuncular</h2>{players.length===0&&<p>Oyuncu yok.</p>}{players.map(p=><div className="row" key={p.discordId}><div><b>{p.username}</b><p>{p.discordId} • {p.wlStatus||'Aktif'}</p><small>{p.banReason||'Ceza yok'} {p.wlEndDate?('• Bitiş: '+(p.wlEndDate==='PERMA'?'PERMA':new Date(p.wlEndDate).toLocaleString('tr-TR'))):''}</small></div><Badge tone={p.wlStatus&&p.wlStatus!=='Aktif'?'bad':'good'}>{p.wlStatus||'Aktif'}</Badge></div>)}</Card>}
-  {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{admins.map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><Badge>{a.role}</Badge></div>)}</Card>}
-  {active==='Yönetim Kadrosu'&&<div className="panelStack"><Card className="panel"><h2>Yönetim Kadrosu Ekle</h2><div className="grid4"><Field value={newStaff.name} onChange={v=>setNewStaff({...newStaff,name:v})} placeholder="Yetkili adı"/><Field value={newStaff.discordId} onChange={v=>setNewStaff({...newStaff,discordId:v})} placeholder="Discord ID"/><select className="field" value={newStaff.rank} onChange={e=>setNewStaff({...newStaff,rank:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select><select className="field" value={newStaff.status} onChange={e=>setNewStaff({...newStaff,status:e.target.value})}><option>Aktif</option><option>Pasif</option><option>İzinli</option></select></div><Field value={newStaff.duty} onChange={v=>setNewStaff({...newStaff,duty:v})} placeholder="Görev alanı / açıklama"/><Field value={newStaff.image||''} onChange={v=>setNewStaff({...newStaff,image:v})} placeholder="Fotoğraf linki (örn: /images/yetkili.png veya https://...)"/><Button onClick={addStaff}>Kadroyu Ekle</Button></Card><Card className="panel"><h2>Mevcut Yönetim Kadrosu</h2>{staffMembers.map((m,i)=><div className="row" key={m.discordId+i}><div><b>{m.name}</b><p>{m.rank} • {m.duty}</p><small>{m.discordId} • {m.status} {m.image?'• Fotoğraf var':''}</small></div><Button variant="ghost" onClick={()=>setStaffMembers(p=>p.filter((_,idx)=>idx!==i))}>Sil</Button></div>)}</Card></div>}
+  {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><Badge>{a.role}</Badge></div>)}</Card>}
+  {active==='Yönetim Kadrosu'&&<div className="panelStack"><Card className="panel"><h2>Yönetim Kadrosu Ekle</h2><div className="grid4"><Field value={newStaff.name} onChange={v=>setNewStaff({...newStaff,name:v})} placeholder="Yetkili adı"/><Field value={newStaff.discordId} onChange={v=>setNewStaff({...newStaff,discordId:v})} placeholder="Discord ID"/><select className="field" value={newStaff.rank} onChange={e=>setNewStaff({...newStaff,rank:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select><select className="field" value={newStaff.status} onChange={e=>setNewStaff({...newStaff,status:e.target.value})}><option>Aktif</option><option>Pasif</option><option>İzinli</option></select></div><Field value={newStaff.duty} onChange={v=>setNewStaff({...newStaff,duty:v})} placeholder="Görev alanı / açıklama"/><Field value={newStaff.image||''} onChange={v=>setNewStaff({...newStaff,image:v})} placeholder="Fotoğraf linki (örn: /images/yetkili.png veya https://...)"/><Button onClick={addStaff}>Kadroyu Ekle</Button></Card><Card className="panel"><h2>Mevcut Yönetim Kadrosu</h2>{sortStaffByRank(staffMembers).map((m,i)=><div className="row" key={m.discordId+i}><div><b>{m.name}</b><p>{m.rank} • {m.duty}</p><small>{m.discordId} • {m.status} {m.image?'• Fotoğraf var':''}</small></div><Button variant="ghost" onClick={()=>setStaffMembers(p=>p.filter((_,idx)=>idx!==i))}>Sil</Button></div>)}</Card></div>}
   {active==='Destekler'&&<Card className="panel"><h2>Destek Yönetimi</h2>{tickets.length===0&&<p>Destek yok.</p>}{tickets.map(t=><div className="row" key={t.id}><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • {t.state} • {t.assigned}</p><small>{t.description}</small></div><div className="actions"><Button onClick={()=>assignTicket(t.id)}>Üstlen</Button><Button variant="ghost" onClick={()=>closeTicket(t.id)}>Kapat</Button></div></div>)}</Card>}
   {active==='Başvurular'&&<Card className="panel"><h2>Yetkili Başvuruları</h2>{apps.length===0&&<p>Başvuru yok.</p>}{apps.map((a,i)=><div className="row" key={a.discordId+i}><div><b>{a.name||a.username}</b><p>{a.discordId} • {a.status}</p><small>{a.reason}</small></div><div className="actions"><Button onClick={()=>appResult(i,'Kabul Edildi')}>Kabul</Button><Button variant="ghost" onClick={()=>appResult(i,'Reddedildi')}>Reddet</Button></div></div>)}</Card>}
   {active==='Ceza Ver'&&<Card className="panel"><h2>Oyuncu / Yetkili Ceza Ver ve WL Al</h2><div className="grid3"><select className="field" value={punish.targetType} onChange={e=>setPunish({...punish,targetType:e.target.value})}><option>Oyuncu</option><option>Yetkili</option></select><Field value={punish.targetId} onChange={v=>setPunish({...punish,targetId:v})} placeholder="Discord ID"/><Field value={punish.targetName} onChange={v=>setPunish({...punish,targetName:v})} placeholder="İsim"/></div><div className="grid3"><select className="field" value={punish.rule} onChange={e=>{const r=rules.find(x=>x.name===e.target.value);setPunish({...punish,rule:e.target.value,penalty:r?.penalty||''})}}><option value="">Kural seç</option>{rules.map(r=><option key={r.id} value={r.name}>{r.name} - {r.penalty}</option>)}</select><Field value={punish.penalty} onChange={v=>setPunish({...punish,penalty:v})} placeholder="Ceza / WL süresi"/><Field value={punish.proof} onChange={v=>setPunish({...punish,proof:v})} placeholder="Kanıt linki"/></div><TextArea value={punish.note} onChange={v=>setPunish({...punish,note:v})} placeholder="Ceza notu"/><div className="commandPreview">
@@ -335,27 +367,34 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
 function App(){
  const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
- const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v15')||'null')||starterAdmins);
+ const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v16')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
  const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v10')||'null')||donateDefault);
- const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v15')||'null')||staffRanksDefault);
- const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v15')||'null')||staffMembersDefault);
+ const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v16')||'null')||staffRanksDefault);
+ const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v16')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
 
  useEffect(()=>{
-  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V15','1');
+  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V16','1');
   setStaffRanks(staffRanksDefault);
   setStaffMembers(prev=>{
-    const hasNewRanks = prev.some(x=>['Head Master','Head Manager','Senior Manager','Lead Admin','Web Developer'].includes(x.rank));
-    return hasNewRanks ? prev.map(x=>({...x, level:getStaffLevel(x.rank), image:x.image||''})) : staffMembersDefault;
+    const fixed = (prev && prev.length ? prev : staffMembersDefault).map(x=>({
+      ...x,
+      level:getStaffLevel(x.rank),
+      image:x.image||''
+    }));
+    return fixed;
   });
-  setAdmins(prev=>prev.map(a=>({...a, level:getStaffLevel(a.role)})));
+  setAdmins(prev=>{
+    const base = prev && prev.length ? prev : starterAdmins;
+    return base.map(a=>({...a, level:getStaffLevel(a.role)}));
+  });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v15',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v10',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v15',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v15',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v10',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
  function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}
