@@ -110,29 +110,23 @@ function sortStaffByRank(list) {
 }
 
 
+
 function canFounderManage(admin) {
-  return String(admin?.role || '').toLowerCase() === 'founder';
+  return String(admin?.role || '').trim().toLowerCase() === 'founder';
 }
 
-
-function findRankByLevel(level) {
-  return staffRanksDefault.find(r=>Number(r.level)===Number(level)) || null;
+function findRankByName(rank) {
+  return staffRanksDefault.find(r=>r.rank===rank) || {level:getStaffLevel(rank), rank};
 }
 
 function nextLowerRank(role) {
   const current = getStaffLevel(role);
-  const lower = staffRanksDefault
-    .filter(r=>Number(r.level) < Number(current))
-    .sort((a,b)=>Number(b.level)-Number(a.level))[0];
-  return lower || null;
+  return staffRanksDefault.filter(r=>Number(r.level) < Number(current)).sort((a,b)=>Number(b.level)-Number(a.level))[0] || null;
 }
 
 function nextHigherRank(role) {
   const current = getStaffLevel(role);
-  const higher = staffRanksDefault
-    .filter(r=>Number(r.level) > Number(current))
-    .sort((a,b)=>Number(a.level)-Number(b.level))[0];
-  return higher || null;
+  return staffRanksDefault.filter(r=>Number(r.level) > Number(current)).sort((a,b)=>Number(a.level)-Number(b.level))[0] || null;
 }
 
 function now() { return new Date().toLocaleString('tr-TR'); }
@@ -187,7 +181,9 @@ async function sendDiscordLog(title, description) {
   } catch(e) { console.log('Discord webhook gönderilemedi', e); }
 }
 
-function Button({children,onClick,variant='red',className='',disabled=false}) { return <button type="button" disabled={disabled} onClick={onClick} className={`btn ${variant} ${className}`}>{children}</button> }
+function Button({children,onClick,variant='red',className='',disabled=false}) {
+ return <button type="button" disabled={disabled} onClick={(e)=>{e.preventDefault();e.stopPropagation();onClick&&onClick(e)}} className={`btn ${variant} ${className}`}>{children}</button>
+}
 function Card({children,className=''}) { return <div className={`card ${className}`}>{children}</div> }
 function Field({value,onChange,placeholder,type='text'}) { return <input className="field" type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/> }
 function TextArea({value,onChange,placeholder}) { return <textarea className="textarea" value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/> }
@@ -336,7 +332,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
   const item={...app,discordId:player.discordId,username:player.username,status:'Bekliyor',createdAt:now()};
   setApps(p=>[item,...p]); setLogs(p=>[now()+' - yetkili başvurusu: '+player.username,...p]); sendDiscordLog('Yeni Yetkili Başvurusu',`${player.username} başvuru gönderdi.`);
  }
- const menu=['Dashboard','Destek Aç','Taleplerim','Yetkili Başvuru','Cezalarım','Profilim'];
+ const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Destekler','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
  return <div className="adminLayout playerLayout"><aside><Logo/><p>{player.username}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setPlayer(null);setPage('home')}}>Çıkış</Button></aside><main><Title k="OYUNCU PANELİ" t={'Hoş geldin, '+player.username} p="Destek, başvuru ve ceza durumunu buradan takip edebilirsin."/>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Ticket/><div><span>Destek</span><b>{myTickets.length}</b></div></Card><Card className="stat"><ClipboardList/><div><span>Başvuru</span><b>{myApp?myApp.status:'Yok'}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishment?'Var':'Yok'}</b></div></Card><Card className="stat"><Clock/><div><span>WL Durum</span><b>{activePunishment?daysLeft(activePunishment.endDate):'Aktif'}</b></div></Card></div>}
   {active==='Destek Aç'&&<Card className="panel"><h2>Destek Talebi Aç</h2><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>Ban İtiraz</option><option>WL İtiraz</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
@@ -373,15 +369,59 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  }
  function finishPunishment(id){const p=punishments.find(x=>x.id===id);setPunishments(all=>all.map(x=>x.id===id?{...x,status:'Bitti'}:x));if(p?.targetType==='Oyuncu')setPlayers(all=>all.map(x=>String(x.discordId)===String(p.targetId)?{...x,wlStatus:'Aktif',wlEndDate:'',banReason:''}:x));sendDiscordLog('Ceza Bitti / WL Geri Verildi',`${p?.targetId} için ceza bitirildi.`)}
  function saveDonate(){setDonate(p=>p.map(d=>d.type===editDonate.type?{...editDonate,images:(editDonate.images||[]).slice(0,4)}:d));setEditDonate(null)}
+
+ function removeAdminOnlyFounder(discordId){
+  if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
+  const id=String(discordId);
+  const target=admins.find(a=>String(a.discordId)===id);
+  if(!target) return alert('Yetkili bulunamadı.');
+  if(String(admin.discordId)===id) return alert('Kendi hesabını silemezsin.');
+  if(!confirm(`${target.username} adlı yetkili kaldırılacak. Emin misin?`)) return;
+  setAdmins(prev=>prev.filter(a=>String(a.discordId)!==id));
+  setLogs(prev=>[now()+' - Founder yetkili kaldırdı: '+target.username+' / '+target.role,...prev]);
+ }
+
+ function removeStaffOnlyFounder(discordId){
+  if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
+  const id=String(discordId);
+  const target=staffMembers.find(s=>String(s.discordId)===id);
+  if(!target) return alert('Kadro bulunamadı.');
+  if(!confirm(`${target.name} yönetim kadrosundan kaldırılacak. Emin misin?`)) return;
+  setStaffMembers(prev=>prev.filter(s=>String(s.discordId)!==id));
+  setLogs(prev=>[now()+' - Founder kadrodan kaldırdı: '+target.name+' / '+target.rank,...prev]);
+ }
+
+ function changeAdminRankOnlyFounder(discordId,direction){
+  if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
+  const id=String(discordId);
+  const target=admins.find(a=>String(a.discordId)===id);
+  if(!target) return alert('Yetkili bulunamadı.');
+  if(String(admin.discordId)===id && direction==='down') return alert('Kendi Founder yetkini düşüremezsin.');
+  const next=direction==='up' ? nextHigherRank(target.role) : nextLowerRank(target.role);
+  if(!next) return alert('Bu yönde geçilecek yetki yok.');
+  setAdmins(prev=>prev.map(a=>String(a.discordId)===id ? {...a, role:next.rank, level:next.level} : a));
+  setLogs(prev=>[now()+` - Founder yetki ${direction==='up'?'yükseltti':'düşürdü'}: ${target.username} / ${target.role} -> ${next.rank}`,...prev]);
+ }
+
+ function changeStaffRankOnlyFounder(discordId,direction){
+  if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
+  const id=String(discordId);
+  const target=staffMembers.find(s=>String(s.discordId)===id);
+  if(!target) return alert('Kadro bulunamadı.');
+  const next=direction==='up' ? nextHigherRank(target.rank) : nextLowerRank(target.rank);
+  if(!next) return alert('Bu yönde geçilecek yetki yok.');
+  setStaffMembers(prev=>prev.map(s=>String(s.discordId)===id ? {...s, rank:next.rank, level:next.level} : s));
+  setLogs(prev=>[now()+` - Founder kadro yetkisi ${direction==='up'?'yükseltti':'düşürdü'}: ${target.name} / ${target.rank} -> ${next.rank}`,...prev]);
+ }
+
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
 
  return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Users/><div><span>Oyuncu</span><b>{players.length}</b></div></Card><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishments.length}</b></div></Card><Card className="stat"><Ticket/><div><span>Destek</span><b>{tickets.length}</b></div></Card></div>}
   {active==='Oyuncular'&&<Card className="panel"><h2>Oyuncular</h2>{players.length===0&&<p>Oyuncu yok.</p>}{players.map(p=><div className="row" key={p.discordId}><div><b>{p.username}</b><p>{p.discordId} • {p.wlStatus||'Aktif'}</p><small>{p.banReason||'Ceza yok'} {p.wlEndDate?('• Bitiş: '+(p.wlEndDate==='PERMA'?'PERMA':new Date(p.wlEndDate).toLocaleString('tr-TR'))):''}</small></div><Badge tone={p.wlStatus&&p.wlStatus!=='Aktif'?'bad':'good'}>{p.wlStatus||'Aktif'}</Badge></div>)}</Card>}
-  {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><Badge>{a.role}</Badge></div>)}</Card>}
-  {active==='Yönetim Kadrosu'&&<div className="panelStack"><Card className="panel"><h2>Yönetim Kadrosu Ekle</h2><div className="grid4"><Field value={newStaff.name} onChange={v=>setNewStaff({...newStaff,name:v})} placeholder="Yetkili adı"/><Field value={newStaff.discordId} onChange={v=>setNewStaff({...newStaff,discordId:v})} placeholder="Discord ID"/><select className="field" value={newStaff.rank} onChange={e=>setNewStaff({...newStaff,rank:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select><select className="field" value={newStaff.status} onChange={e=>setNewStaff({...newStaff,status:e.target.value})}><option>Aktif</option><option>Pasif</option><option>İzinli</option></select></div><Field value={newStaff.duty} onChange={v=>setNewStaff({...newStaff,duty:v})} placeholder="Görev alanı / açıklama"/><Field value={newStaff.image||''} onChange={v=>setNewStaff({...newStaff,image:v})} placeholder="Fotoğraf linki (örn: /images/yetkili.png veya https://...)"/><Button onClick={addStaff}>Kadroyu Ekle</Button></Card><Card className="panel"><h2>Mevcut Yönetim Kadrosu</h2>{sortStaffByRank(staffMembers).map((m,i)=><div className="row" key={m.discordId+i}><div><b>{m.name}</b><p>{m.rank} • {m.duty}</p><small>{m.discordId} • {m.status} {m.image?'• Fotoğraf var':''}</small></div><Button variant="ghost" onClick={()=>setStaffMembers(p=>p.filter((_,idx)=>idx!==i))}>Sil</Button></div>)}</Card></div>}
-  {active==='Founder Panel'&&<Card className="panel"><h2>Founder Özel Panel</h2>{!canFounderManage(admin)&&<p>Bu alan sadece Founder yetkisine açıktır.</p>}{canFounderManage(admin)&&<><p>Yetkili kaldırma, yetki yükseltme/düşürme ve üst yönetim kontrolleri bu panelden yapılır.</p><div className="grid4"><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Crown/><div><span>Founder</span><b>{admins.filter(a=>a.role==='Founder').length}</b></div></Card><Card className="stat"><Users/><div><span>Kadro</span><b>{staffMembers.length}</b></div></Card><Card className="stat"><Bell/><div><span>Log</span><b>{logs.length}</b></div></Card></div><h3>Hızlı Kontrol</h3>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={'fp'+a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role}</p><small>{a.discordId}</small></div><div className="actions staffActions"><Button variant="ghost" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</Button><Button variant="ghost" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</Button><Button variant="ghost" className="dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</Button></div></div>)}</>}</Card>}
-
+  {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><div className="actions staffActions"><Badge>{a.role}</Badge>{canFounderManage(admin)&&<><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</button></>}</div></div>)}</Card>}
+  {active==='Yönetim Kadrosu'&&<div className="panelStack"><Card className="panel"><h2>Yönetim Kadrosu Ekle</h2><div className="grid4"><Field value={newStaff.name} onChange={v=>setNewStaff({...newStaff,name:v})} placeholder="Yetkili adı"/><Field value={newStaff.discordId} onChange={v=>setNewStaff({...newStaff,discordId:v})} placeholder="Discord ID"/><select className="field" value={newStaff.rank} onChange={e=>setNewStaff({...newStaff,rank:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select><select className="field" value={newStaff.status} onChange={e=>setNewStaff({...newStaff,status:e.target.value})}><option>Aktif</option><option>Pasif</option><option>İzinli</option></select></div><Field value={newStaff.duty} onChange={v=>setNewStaff({...newStaff,duty:v})} placeholder="Görev alanı / açıklama"/><Field value={newStaff.image||''} onChange={v=>setNewStaff({...newStaff,image:v})} placeholder="Fotoğraf linki (örn: /images/yetkili.png veya https://...)"/><Button onClick={addStaff}>Kadroyu Ekle</Button></Card><Card className="panel"><h2>Mevcut Yönetim Kadrosu</h2>{sortStaffByRank(staffMembers).map((m,i)=><div className="row" key={m.discordId+i}><div><b>{m.name}</b><p>{m.rank} • {m.duty}</p><small>{m.discordId} • {m.status} {m.image?'• Fotoğraf var':''}</small></div><div className="actions staffActions">{canFounderManage(admin)&&<><button type="button" className="btn ghost smallBtn" onClick={()=>changeStaffRankOnlyFounder(m.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeStaffRankOnlyFounder(m.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeStaffOnlyFounder(m.discordId)}>Kaldır</button></>}</div></div>)}</Card></div>}
+  {active==='Founder Panel'&&<Card className="panel"><h2>Founder Özel Panel</h2>{!canFounderManage(admin)&&<p>Bu alan sadece Founder yetkisine açıktır.</p>}{canFounderManage(admin)&&<><p>Buradan yetkili silebilir, yetki yükseltebilir veya düşürebilirsin.</p>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={'fp'+a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role}</p><small>{a.discordId}</small></div><div className="actions staffActions"><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</button></div></div>)}</>}</Card>}
   {active==='Destekler'&&<Card className="panel"><h2>Destek Yönetimi</h2>{tickets.length===0&&<p>Destek yok.</p>}{tickets.map(t=><div className="row" key={t.id}><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • {t.state} • {t.assigned}</p><small>{t.description}</small></div><div className="actions"><Button onClick={()=>assignTicket(t.id)}>Üstlen</Button><Button variant="ghost" onClick={()=>closeTicket(t.id)}>Kapat</Button></div></div>)}</Card>}
   {active==='Başvurular'&&<Card className="panel"><h2>Yetkili Başvuruları</h2>{apps.length===0&&<p>Başvuru yok.</p>}{apps.map((a,i)=><div className="row" key={a.discordId+i}><div><b>{a.name||a.username}</b><p>{a.discordId} • {a.status}</p><small>{a.reason}</small></div><div className="actions"><Button onClick={()=>appResult(i,'Kabul Edildi')}>Kabul</Button><Button variant="ghost" onClick={()=>appResult(i,'Reddedildi')}>Reddet</Button></div></div>)}</Card>}
   {active==='Ceza Ver'&&<Card className="panel"><h2>Oyuncu / Yetkili Ceza Ver ve WL Al</h2><div className="grid3"><select className="field" value={punish.targetType} onChange={e=>setPunish({...punish,targetType:e.target.value})}><option>Oyuncu</option><option>Yetkili</option></select><Field value={punish.targetId} onChange={v=>setPunish({...punish,targetId:v})} placeholder="Discord ID"/><Field value={punish.targetName} onChange={v=>setPunish({...punish,targetName:v})} placeholder="İsim"/></div><div className="grid3"><select className="field" value={punish.rule} onChange={e=>{const r=rules.find(x=>x.name===e.target.value);setPunish({...punish,rule:e.target.value,penalty:r?.penalty||''})}}><option value="">Kural seç</option>{rules.map(r=><option key={r.id} value={r.name}>{r.name} - {r.penalty}</option>)}</select><Field value={punish.penalty} onChange={v=>setPunish({...punish,penalty:v})} placeholder="Ceza / WL süresi"/><Field value={punish.proof} onChange={v=>setPunish({...punish,proof:v})} placeholder="Kanıt linki"/></div><TextArea value={punish.note} onChange={v=>setPunish({...punish,note:v})} placeholder="Ceza notu"/><div className="commandPreview">
@@ -411,11 +451,11 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
 function App(){
  const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
- const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v17')||'null')||starterAdmins);
+ const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v19')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
  const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||donateDefault);
- const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v17')||'null')||staffRanksDefault);
- const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v17')||'null')||staffMembersDefault);
+ const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v19')||'null')||staffRanksDefault);
+ const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v19')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
@@ -439,7 +479,7 @@ function App(){
 
 
  useEffect(()=>{
-  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V17','1');
+  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V19','1');
   setStaffRanks(staffRanksDefault);
   setStaffMembers(prev=>{
     const fixed = (prev && prev.length ? prev : staffMembersDefault).map(x=>({
@@ -455,7 +495,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v17',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v17',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v17',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
  function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}
