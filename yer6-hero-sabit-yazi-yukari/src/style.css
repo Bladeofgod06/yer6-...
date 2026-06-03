@@ -335,3 +335,30 @@
     height:140px;
   }
 }
+
+
+/* =========================================================
+   YER6 FOUNDER MANAGEMENT FIX
+   Founder özel yetkili kaldırma ve yetki değiştirme butonları.
+   ========================================================= */
+
+.staffActions{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.dangerBtn{
+  border-color:rgba(255,31,49,.45)!important;
+  color:#ff9aa8!important;
+}
+
+.dangerBtn:hover{
+  background:#3a0509!important;
+  color:white!important;
+}
+
+@media(max-width:900px){
+  .staffActions{
+    justify-content:flex-start;
+  }
+}
