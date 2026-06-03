@@ -341,7 +341,78 @@ function CharactersPage({setPage,openLogin}) {
 
 function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <div className="inner"><Header setPage={setPage} openLogin={openLogin}/><main><Title k="MİNİ OYUN" t="Karakter Oyunu" p="Kader puanını belirle."/><Card className="game"><Gamepad2/><h2>{s??'?'}</h2><Button onClick={()=>setS(Math.ceil(Math.random()*100))}>Zar At</Button></Card></main></div> }
 
-function MarketPage({setPage,openLogin,donate}) { const icon={Araba:Car,Ev:House,Motor:Zap,Boy:Users,Ped:Crown,'Özel Paket':Star}; return <div className="inner"><Header setPage={setPage} openLogin={openLogin}/><main><Title k="DONATE" t="Donate Market" p="Araç, ev, motor, ped ve paketler."/><div className="cards">{donate.map(d=>{const I=icon[d.type]||ShoppingCart;return <Card className="mini" key={d.type}><I/><h2>{d.type}</h2>{d.items.map(x=><p key={x}>• {x}</p>)}<Button>Satın Al</Button></Card>})}</div></main></div> }
+function MarketPage({setPage,openLogin,donate}) {
+ const [selected,setSelected]=useState(null);
+ const market=(donate&&donate.length?donate:donateDefault).map(normalizeDonateCategory);
+ const active=selected||market[0];
+ const discordUrl='https://discord.gg/ysewESgQm';
+
+ return <div className="inner luxuryMarketPage"><Header setPage={setPage} openLogin={openLogin}/><main>
+  <section className="luxMarketHero">
+   <div className="luxHeroText">
+    <span>YER6 DONATE MARKET</span>
+    <h1>LÜKS DONATE<br/><em>KOLEKSİYONU</em></h1>
+    <p>Kategorilere tıkla, donate araçları ve özel paketleri incele. Fiyat bilgisi sitede yazmaz; satın alma işlemi Discord üzerinden yetkililerle yapılır.</p>
+    <div className="luxMarketActions">
+     <Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button>
+     <Button variant="ghost" onClick={()=>setPage('home')}>Ana Sayfaya Dön</Button>
+    </div>
+   </div>
+   <Card className="luxMarketInfo">
+    <Crown size={42}/>
+    <h2>Fiyat Gizli Sistem</h2>
+    <p>Ürün detayları, stok ve teslimat bilgisi Discord üzerinden verilir.</p>
+   </Card>
+  </section>
+
+  <section className="luxCategoryGrid">
+   {market.map((d,i)=>{
+    const cover=d.cover||(d.images||[]).find(Boolean)||(d.products||[]).find(p=>p.image)?.image;
+    return <button className={`luxCategoryCard ${active?.type===d.type?'selected':''}`} key={d.type+i} onClick={()=>setSelected(d)}>
+     {cover?<img src={cover} alt={d.type}/>:<div className="luxNoImage"><ShoppingCart size={38}/></div>}
+     <div className="luxCardShade"></div>
+     <div className="luxCategoryContent">
+      <small>DONATE KATEGORİ</small>
+      <h2>{d.type}</h2>
+      <p>{d.desc||'Özel donate kategorisi. Ürünleri görmek için tıkla.'}</p>
+      <span>Ürünleri Gör</span>
+     </div>
+    </button>
+   })}
+  </section>
+
+  {active&&<section className="luxProducts">
+   <div className="luxProductsHead">
+    <div>
+     <span>SEÇİLİ KATEGORİ</span>
+     <h2>{active.type}</h2>
+     <p>{active.desc||'Bu kategorideki donate ürünleri.'}</p>
+    </div>
+    <Button onClick={()=>window.open(discordUrl,'_blank')}>Satın Almak İçin Discord</Button>
+   </div>
+
+   <div className="luxProductGrid">
+    {(active.products||[]).map((product,i)=>{
+     const img=product.image||(active.images||[])[i]||active.cover;
+     return <Card className="luxProductCard" key={(product.name||'urun')+i}>
+      {img?<img src={img} alt={product.name}/>:<div className="luxProductEmpty"><Star size={30}/></div>}
+      <div className="luxProductBody">
+       <small>{active.type}</small>
+       <h3>{product.name}</h3>
+       <p>{product.desc||'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}</p>
+       <Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button>
+      </div>
+     </Card>
+    })}
+    {(!active.products||active.products.length===0)&&<Card className="luxEmptyProducts">
+     <ShoppingCart size={34}/>
+     <h3>Bu kategoriye ürün eklenmedi</h3>
+     <p>Admin panelinden bu kategoriye donate araç/ürün kartı ekleyebilirsin.</p>
+    </Card>}
+   </div>
+  </section>}
+ </main></div>
+}
 
 function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,registerPlayer}) {
  const isAdmin=mode==='admin', isRegister=mode==='register';

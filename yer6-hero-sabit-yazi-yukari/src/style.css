@@ -694,3 +694,25 @@
   .luxCategoryGrid,.luxProductGrid,.donateAdminGrid{grid-template-columns:1fr}
   .luxHeroText h1{font-size:40px}
 }
+
+
+/* =========================================================
+   YER6 DONATE MARKET FORCE NEW DESIGN
+   Bu blok eski donate kart tasarımını ezer.
+   ========================================================= */
+.luxuryMarketPage .cards{display:none!important}
+.luxuryMarketPage .title{display:none!important}
+.luxuryMarketPage main{padding-top:120px!important}
+.luxMarketHero,.luxCategoryGrid,.luxProducts{display:grid!important}
+.luxCategoryGrid{display:grid!important;grid-template-columns:repeat(4,1fr)!important}
+.luxProductGrid{display:grid!important;grid-template-columns:repeat(4,1fr)!important}
+.luxCategoryCard{display:block!important}
+@media(max-width:1200px){
+ .luxCategoryGrid,.luxProductGrid{grid-template-columns:repeat(3,1fr)!important}
+}
+@media(max-width:850px){
+ .luxCategoryGrid,.luxProductGrid{grid-template-columns:repeat(2,1fr)!important}
+}
+@media(max-width:560px){
+ .luxCategoryGrid,.luxProductGrid{grid-template-columns:1fr!important}
+}
