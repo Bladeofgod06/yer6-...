@@ -1,0 +1,8 @@
+Bu sürümde:
+- Ana hero tek fotoğraf yapıldı: public/images/yer6-main-hero.png
+- Hero fotoğrafı değişmez, slider kapalıdır.
+- 'YER6 ROLEPLAY / BİR ŞEHRİN...' yazısı yukarı alındı.
+- Kart görsellerine dokunulmadı.
+- Yapay zeka asistanı duruyor.
+
+GitHub'a tüm klasörü yükle. Özellikle public/images klasörü eksik olmasın.

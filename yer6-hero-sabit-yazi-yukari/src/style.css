@@ -1,0 +1,199 @@
+
+*{box-sizing:border-box}html,body,#root{margin:0;min-height:100%;background:#05070a;color:white;font-family:Inter,Arial,sans-serif}button,input,textarea,select{font:inherit}.header{height:78px;position:fixed;inset:0 0 auto 0;z-index:50;background:rgba(3,5,8,.86);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,31,49,.18);display:flex;align-items:center;justify-content:space-between;padding:0 34px}.logo{border:0;background:transparent;color:#fff;font-size:43px;font-style:italic;font-weight:1000;letter-spacing:-4px;cursor:pointer}.logo span{color:#e20d1f}.logo small{display:block;font-size:9px;letter-spacing:7px;color:#aaa}.header nav{display:flex;gap:28px}.header nav button{background:transparent;border:0;color:white;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;transition:.25s}.header nav button:hover{color:#f01427;transform:translateY(-5px)}.headButtons{display:flex;gap:12px}.hamb{display:none;background:#111;border:1px solid #333;color:#fff;border-radius:10px;padding:9px}.btn{background:linear-gradient(135deg,#f01427,#a80714);color:white;border:0;border-radius:8px;padding:14px 22px;font-weight:1000;text-transform:uppercase;cursor:pointer;transition:.25s;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn:hover{transform:translateY(-7px);box-shadow:0 20px 50px rgba(240,20,39,.3)}.btn.ghost{background:rgba(0,0,0,.36);border:1px solid rgba(255,255,255,.2)}.full{width:100%}.card{background:rgba(9,12,16,.82);border:1px solid rgba(240,20,39,.2);border-radius:14px;box-shadow:0 25px 70px rgba(0,0,0,.35);backdrop-filter:blur(15px);transition:.25s}.card:hover{transform:translateY(-6px);border-color:rgba(240,20,39,.45)}.hero{height:790px;position:relative;overflow:hidden}.heroImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:1s}.heroImg.active{opacity:1;transform:scale(1.04)}.heroDark{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.92),rgba(0,0,0,.3),rgba(0,0,0,.86)),linear-gradient(180deg,rgba(0,0,0,.15),#05070a 96%)}.heroText{position:absolute;left:46px;top:260px;width:min(560px,90vw)}.heroText span,.title span{color:#ff1f31;font-weight:1000}.heroText h1{font-size:56px;line-height:1.12;margin:15px 0;text-transform:uppercase}.heroText h1 em{color:#ff1f31;font-style:normal}.heroText p{color:#ddd;font-size:18px;line-height:1.7}.heroButtons{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}.status{position:absolute;right:52px;top:210px;width:320px;padding:24px}.status div{display:flex;justify-content:space-between;color:#ff1f31}.status p{display:flex;justify-content:space-between;color:#aaa;border-top:1px solid rgba(255,255,255,.08);padding:16px 0}.status b{color:white}.galleryRow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:45px}.photoCard{height:420px;overflow:hidden;position:relative}.photoCard img{width:100%;height:100%;object-fit:cover}.photoCard h2{position:absolute;left:22px;bottom:18px}.inner main{padding:120px 42px 60px}.title{text-align:center;margin-bottom:28px}.title h1{font-size:52px;margin:8px 0}.title p{color:#aaa}.filters{display:grid;grid-template-columns:1fr 260px;gap:12px}.search{display:flex;align-items:center;gap:12px;background:#090c10;border:1px solid rgba(240,20,39,.22);border-radius:12px;padding:0 14px;margin-bottom:18px}.search input{flex:1;background:transparent;border:0;color:white;outline:0;padding:16px}.field,.textarea{width:100%;background:#0e1117!important;color:white!important;border:1px solid rgba(240,20,39,.25);border-radius:10px;padding:15px;margin-bottom:12px;outline:0}.field option{background:#111827;color:white}.textarea{min-height:130px}.rule{display:grid;grid-template-columns:54px 1fr 150px 220px;gap:14px;align-items:center;border-bottom:1px solid rgba(255,255,255,.07);padding:14px}.rule span{color:#888}.rule em{color:#999;font-style:normal}.badge{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:900;background:#341700;color:#ffd28b;border:1px solid rgba(255,200,100,.2)}.badge.bad{background:#3a0509;color:#ff9aa8}.badge.note{background:#111a2a;color:#b9d5ff}.badge.good{background:#052d1a;color:#8bffc2}.rankGrid,.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.rankCard,.mini,.form,.panel{padding:24px}.rankCard b,.mini svg{color:#ff1f31}.mini p,.mini small{color:#aaa}.game{max-width:520px;margin:auto;text-align:center;padding:40px}.game svg{width:76px;height:76px;color:#ff1f31}.game h2{font-size:80px}.loginPage{min-height:100vh;display:grid;place-items:center;background:url('/images/hero.jpg') center/cover no-repeat;position:relative}.loginPage:before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.75)}.back{position:absolute;z-index:2;left:24px;top:24px}.loginCard{position:relative;z-index:2;width:min(540px,94vw);padding:35px;text-align:center}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0}.adminLayout{min-height:100vh;display:flex;background:#06080b}.adminLayout aside{width:300px;background:#0b0e13;border-right:1px solid rgba(240,20,39,.2);padding:22px;display:flex;flex-direction:column;gap:10px}.adminLayout aside p{color:#aaa}.adminLayout aside button:not(.logo):not(.btn){background:transparent;border:0;color:#ddd;text-align:left;padding:13px;border-radius:10px;font-weight:900;cursor:pointer}.adminLayout aside button.active,.adminLayout aside button:hover:not(.logo):not(.btn){background:#e61127;color:white}.adminLayout main{flex:1;padding:30px;overflow:auto}.adminTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:25px}.adminTop h1{font-size:42px;margin:0}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{padding:20px;display:flex;gap:14px}.stat svg{color:#ff1f31}.stat b{font-size:30px}.row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(0,0,0,.25);margin-bottom:12px}.row p,.row small{color:#aaa}.actions{display:flex;gap:8px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:90;display:grid;place-items:center;padding:20px}.modalCard{width:min(700px,96vw);padding:26px}.log{padding:14px;border-bottom:1px solid rgba(255,255,255,.08);color:#ddd}footer{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.3fr;gap:30px;padding:55px 45px;border-top:1px solid rgba(240,20,39,.18);color:#aaa}footer h3{color:#fff}footer p{cursor:pointer}.footPanel{padding:24px}.social svg{margin-right:12px;color:white}@media(max-width:1000px){.header{padding:0 16px}.header nav{display:none;position:absolute;top:84px;left:16px;right:16px;background:#0b0e13;flex-direction:column;padding:14px;border-radius:12px}.header nav.show{display:flex}.hamb{display:block}.headButtons .ghost{display:none}.heroText{left:20px;top:160px}.heroText h1{font-size:40px}.status{position:relative;right:auto;top:480px;margin:0 20px;width:auto}.galleryRow,.rankGrid,.cards,.grid4,.grid3,.filters,footer{grid-template-columns:1fr}.rule{grid-template-columns:40px 1fr}.rule em,.rule .badge{grid-column:2}.adminLayout{display:block}.adminLayout aside{width:100%}}
+
+.panelStack{display:grid;gap:18px}
+.sectionHead{margin:28px 0 16px;font-size:28px}
+.staffGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:34px}
+.staffCard{padding:24px;text-align:center;position:relative;overflow:hidden}
+.staffCard .avatar{width:72px;height:72px;border-radius:22px;margin:0 auto 14px;background:linear-gradient(135deg,#f01427,#5b050c);display:grid;place-items:center;font-size:32px;font-weight:1000;box-shadow:0 0 35px rgba(240,20,39,.25)}
+.staffCard h2{margin:8px 0 10px}
+.staffCard p{color:#aaa;min-height:38px}
+.staffCard small{display:block;color:#777;margin-top:10px}
+.staffCard .online{display:inline-block;margin-top:14px;color:#22c55e;font-weight:900}
+@media(max-width:1000px){.staffGrid{grid-template-columns:1fr}}
+
+/* v9 oyuncu paneli, destek, başvuru, ceza sistemi */
+.panel p{color:#aaa}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* FINAL v10 Oyuncu panel + WL takip */
+.playerLayout .title{text-align:left}
+.playerLayout main{padding-top:30px}
+.stat b{word-break:break-word;font-size:24px}
+.panel h2{margin-top:0}
+.panelStack{display:grid;gap:18px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.badge.bad{background:#3a0509;color:#ff9aa8}
+.badge.good{background:#052d1a;color:#8bffc2}
+.badge.note{background:#111a2a;color:#b9d5ff}
+@media(max-width:1000px){.playerLayout .title{text-align:center}}
+
+.commandPreview{
+  margin:16px 0;
+  padding:14px;
+  border:1px solid rgba(240,20,39,.25);
+  border-radius:12px;
+  background:rgba(0,0,0,.35);
+}
+.commandPreview b{display:block;margin-bottom:8px;color:#ff1f31}
+.commandPreview code,.miniCommand{
+  display:block;
+  background:#07090d;
+  border:1px solid rgba(255,255,255,.08);
+  padding:12px;
+  border-radius:10px;
+  color:#ddd;
+  word-break:break-all;
+  margin-top:10px;
+}
+
+
+/* =========================================================
+   YER6 FINAL: GORSEL + LOGO + AI FIX
+   public/images klasörü ZIP içinde gelir. Silme.
+   ========================================================= */
+
+.logo.logoImageBtn{
+  font-size:0!important;
+  letter-spacing:0!important;
+  color:transparent!important;
+  width:190px!important;
+  height:74px!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  background:transparent!important;
+  border:0!important;
+  overflow:visible!important;
+}
+
+.logo.logoImageBtn img{
+  width:176px!important;
+  max-height:70px!important;
+  object-fit:contain!important;
+  display:block!important;
+  filter:drop-shadow(0 0 12px rgba(255,0,0,.34))!important;
+}
+
+.logoFallback{display:none!important}
+
+.heroBigLogo{
+  width:340px!important;
+  max-width:90%!important;
+  height:auto!important;
+  display:block!important;
+  object-fit:contain!important;
+  margin:0 0 22px 0!important;
+  filter:drop-shadow(0 0 18px rgba(255,0,0,.42)) drop-shadow(0 0 42px rgba(255,0,0,.18))!important;
+}
+
+.heroText>span{display:none!important}
+
+.header{
+  background:rgba(0,0,0,.94)!important;
+  border-bottom:1px solid rgba(255,0,0,.38)!important;
+}
+
+.heroDark{
+  background:linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.30),rgba(0,0,0,.86)),linear-gradient(180deg,rgba(0,0,0,.05),#05070a 96%)!important;
+}
+
+.galleryRow{
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:18px!important;
+}
+.photoCard{height:360px!important;border-color:rgba(255,0,0,.32)!important}
+.photoCard img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+.photoCard:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.86));pointer-events:none}
+.photoCard h2{z-index:2!important;color:white!important;text-shadow:0 0 14px rgba(0,0,0,.95)!important}
+
+/* AI Assistant */
+.aiBox{position:fixed;right:22px;bottom:22px;z-index:80}
+.aiToggle{
+  background:linear-gradient(135deg,#ff0018,#79000b);
+  color:white;border:1px solid rgba(255,0,0,.45);
+  border-radius:999px;padding:13px 18px;font-weight:1000;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  box-shadow:0 0 30px rgba(255,0,0,.22)
+}
+.aiPanel{width:360px;max-width:calc(100vw - 28px);padding:14px;margin-bottom:12px;background:rgba(5,5,5,.96)!important}
+.aiHead{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,0,0,.22);padding-bottom:10px}
+.aiHead button{background:transparent;border:0;color:white;font-size:26px;cursor:pointer}
+.aiMsgs{height:260px;overflow:auto;padding:10px 0;display:flex;flex-direction:column;gap:8px}
+.aiMsgs p{margin:0;padding:10px 12px;border-radius:12px;line-height:1.45}
+.aiMsgs .ai{background:#111;border:1px solid rgba(255,0,0,.20);color:#ddd;align-self:flex-start}
+.aiMsgs .user{background:linear-gradient(135deg,#ff0018,#79000b);color:white;align-self:flex-end}
+.aiInput{display:flex;gap:8px}
+.aiInput input{flex:1;background:#090909;border:1px solid rgba(255,0,0,.28);border-radius:10px;color:white;padding:12px;outline:0}
+.aiInput button{background:#e61127;color:white;border:0;border-radius:10px;padding:0 12px;font-weight:900;cursor:pointer}
+
+@media(max-width:1200px){.galleryRow{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:1000px){
+ .logo.logoImageBtn{width:145px!important;height:62px!important}
+ .logo.logoImageBtn img{width:138px!important;max-height:58px!important}
+ .heroBigLogo{width:230px!important}
+ .galleryRow{grid-template-columns:1fr!important}
+ .photoCard{height:330px!important}
+ .aiBox{right:14px;bottom:14px}
+}
+
+
+/* =========================================================
+   HERO SABIT FOTO + YAZI YUKARI FIX
+   Ana hero sadece /images/yer6-main-hero.png kullanır.
+   Fotoğraf değişmez, slider kapalıdır.
+   ========================================================= */
+
+.hero{
+  height:760px!important;
+  position:relative!important;
+  overflow:hidden!important;
+}
+
+.heroImg{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  opacity:1!important;
+  transform:none!important;
+  transition:none!important;
+  display:block!important;
+}
+
+.heroDark{
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.28),rgba(0,0,0,.84)),
+    linear-gradient(180deg,rgba(0,0,0,.08),#05070a 96%)!important;
+}
+
+.heroText{
+  top:185px!important;
+  left:46px!important;
+  width:min(560px,90vw)!important;
+}
+
+.heroText>span{
+  display:block!important;
+  color:#ff1f31!important;
+  font-weight:1000!important;
+  margin-bottom:12px!important;
+}
+
+.heroText h1{
+  margin-top:8px!important;
+}
+
+.heroBigLogo{
+  display:none!important;
+}
+
+@media(max-width:1000px){
+  .hero{height:760px!important}
+  .heroText{
+    top:135px!important;
+    left:22px!important;
+  }
+}
