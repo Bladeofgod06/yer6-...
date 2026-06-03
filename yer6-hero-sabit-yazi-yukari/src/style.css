@@ -197,3 +197,42 @@
     left:22px!important;
   }
 }
+
+
+/* =========================================================
+   YER6 STAFF PHOTO + RANK FIX
+   Yönetim Kadrosu kartlarında fotoğraf desteği.
+   ========================================================= */
+
+.staffPhoto{
+  width:100%;
+  height:210px;
+  object-fit:cover;
+  border-radius:14px;
+  border:1px solid rgba(240,20,39,.28);
+  margin-bottom:16px;
+  display:block;
+  box-shadow:0 0 28px rgba(0,0,0,.35);
+}
+
+.staffCard{
+  overflow:hidden;
+}
+
+.staffCard .badge.bad{
+  background:#3a0509;
+  color:#ff9aa8;
+  border-color:rgba(255,31,49,.35);
+}
+
+@media(max-width:1200px){
+  .staffGrid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .staffGrid{
+    grid-template-columns:1fr;
+  }
+}
