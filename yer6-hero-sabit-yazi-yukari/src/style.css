@@ -380,3 +380,72 @@
 .dangerBtn{border-color:rgba(255,31,49,.45)!important;color:#ff9aa8!important}
 .dangerBtn:hover{background:#3a0509!important;color:white!important}
 @media(max-width:900px){.staffActions{justify-content:flex-start}}
+
+
+/* =========================================================
+   YER6 PLAYER PANEL CLEAN FIX
+   Oyuncu panelinde sadece destek, talepler, başvuru ve profil görünür.
+   ========================================================= */
+
+.cleanPlayerPanel aside button{
+  font-size:16px;
+}
+
+.ticketThread{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:16px;
+  background:rgba(0,0,0,.18);
+}
+
+.ticketMessages{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:14px 0;
+}
+
+.ticketMsg{
+  max-width:760px;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.ticketMsg p{
+  margin:7px 0;
+  color:#ddd;
+}
+
+.ticketMsg small{
+  color:#777;
+}
+
+.playerMsg{
+  background:rgba(17,24,39,.65);
+  align-self:flex-start;
+}
+
+.staffMsg{
+  background:rgba(58,5,9,.72);
+  border-color:rgba(240,20,39,.28);
+  align-self:flex-end;
+}
+
+.ticketReply{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+}
+
+.ticketReply .field{
+  margin-bottom:0;
+}
+
+@media(max-width:800px){
+  .ticketReply{
+    grid-template-columns:1fr;
+  }
+}
