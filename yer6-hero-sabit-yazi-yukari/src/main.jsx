@@ -14,7 +14,7 @@ const supabase = createClient(
 const dbPlayerToApp = (p) => ({ username:p.username, discordId:p.discord_id, password:p.password, steam:p.steam||'', wlStatus:p.wl_status||'Aktif', wlEndDate:p.wl_end_date||'', banReason:p.ban_reason||'' });
 const dbAdminToApp = (a) => ({ username:a.username, discordId:a.discord_id, password:a.password, role:a.role, level:a.level });
 const dbStaffToApp = (s) => ({ name:s.name, discordId:s.discord_id, rank:s.rank, level:s.level, duty:s.duty||'', status:s.status||'Aktif', image:s.image||'' });
-const dbDonateToApp = (d) => ({ id:d.id, type:d.type, items:d.items||[], images:d.images||['','','',''], products:d.products||[] });
+const dbDonateToApp = (d) => ({ id:d.id, type:d.type, items:d.items||[], images:d.images||['','','',''], products:d.products||[], cover:d.cover||'', desc:d.desc||'' });
 const dbAppToApp = (a) => ({ id:a.id, username:a.username, discordId:a.discord_id, name:a.name, age:a.age, experience:a.experience, reason:a.reason, status:a.status||'Bekliyor', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
 const dbPunishmentToApp = (p) => ({ id:String(p.id), targetType:p.target_type, targetId:p.target_id, targetName:p.target_name, rule:p.rule, penalty:p.penalty, proof:p.proof, note:p.note, endDate:p.end_date, status:p.status, by:p.by_admin, createdAt:p.created_at ? new Date(p.created_at).toLocaleString('tr-TR') : now() });
 const dbTicketToApp = (t) => ({ id:String(t.id), dbId:t.id, username:t.username, discordId:t.discord_id, type:t.type, title:t.title, description:t.description||'', proof:t.proof||'', state:t.state||'Açık', assigned:t.assigned||'Boşta', createdAt:t.created_at ? new Date(t.created_at).toLocaleString('tr-TR') : now(), messages:(t.ticket_messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(m=>({by:m.sender, role:m.role, text:m.message, time:m.created_at ? new Date(m.created_at).toLocaleString('tr-TR') : now()})) });
@@ -95,22 +95,11 @@ const donateDefault = [
   { type:'Donate Özel Paket', items:['Diamond VIP','Founder Destek','Aile Paketi','Full Paket'], images:['','','',''] }
 ];
 
-
 function normalizeDonateCategory(d){
-  const oldItems = Array.isArray(d.items) ? d.items : [];
-  const oldImages = Array.isArray(d.images) ? d.images : [];
-  const products = Array.isArray(d.products) && d.products.length
-    ? d.products
-    : oldItems.map((name,i)=>({ name, image: oldImages[i] || '', desc: 'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.' }));
-  return {
-    id: d.id,
-    type: d.type || 'Yeni Kategori',
-    desc: d.desc || 'Bu kategorideki özel donate ürünleri.',
-    cover: d.cover || oldImages.find(Boolean) || '',
-    items: oldItems.length ? oldItems : products.map(p=>p.name),
-    images: oldImages.length ? oldImages : products.slice(0,4).map(p=>p.image || ''),
-    products
-  };
+ const oldItems=Array.isArray(d.items)?d.items:[];
+ const oldImages=Array.isArray(d.images)?d.images:[];
+ const products=Array.isArray(d.products)&&d.products.length?d.products:oldItems.map((name,i)=>({name,image:oldImages[i]||'',desc:'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}));
+ return {id:d.id,type:d.type||'Yeni Kategori',desc:d.desc||'Bu kategorideki özel donate ürünleri.',cover:d.cover||oldImages.find(Boolean)||products.find(p=>p.image)?.image||'',items:products.map(p=>p.name),images:products.slice(0,4).map(p=>p.image||''),products};
 }
 
 const staffRankOrder = {
@@ -344,73 +333,11 @@ function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <
 function MarketPage({setPage,openLogin,donate}) {
  const [selected,setSelected]=useState(null);
  const market=(donate&&donate.length?donate:donateDefault).map(normalizeDonateCategory);
- const active=selected||market[0];
  const discordUrl='https://discord.gg/ysewESgQm';
-
  return <div className="inner luxuryMarketPage"><Header setPage={setPage} openLogin={openLogin}/><main>
-  <section className="luxMarketHero">
-   <div className="luxHeroText">
-    <span>YER6 DONATE MARKET</span>
-    <h1>LÜKS DONATE<br/><em>KOLEKSİYONU</em></h1>
-    <p>Kategorilere tıkla, donate araçları ve özel paketleri incele. Fiyat bilgisi sitede yazmaz; satın alma işlemi Discord üzerinden yetkililerle yapılır.</p>
-    <div className="luxMarketActions">
-     <Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button>
-     <Button variant="ghost" onClick={()=>setPage('home')}>Ana Sayfaya Dön</Button>
-    </div>
-   </div>
-   <Card className="luxMarketInfo">
-    <Crown size={42}/>
-    <h2>Fiyat Gizli Sistem</h2>
-    <p>Ürün detayları, stok ve teslimat bilgisi Discord üzerinden verilir.</p>
-   </Card>
-  </section>
-
-  <section className="luxCategoryGrid">
-   {market.map((d,i)=>{
-    const cover=d.cover||(d.images||[]).find(Boolean)||(d.products||[]).find(p=>p.image)?.image;
-    return <button className={`luxCategoryCard ${active?.type===d.type?'selected':''}`} key={d.type+i} onClick={()=>setSelected(d)}>
-     {cover?<img src={cover} alt={d.type}/>:<div className="luxNoImage"><ShoppingCart size={38}/></div>}
-     <div className="luxCardShade"></div>
-     <div className="luxCategoryContent">
-      <small>DONATE KATEGORİ</small>
-      <h2>{d.type}</h2>
-      <p>{d.desc||'Özel donate kategorisi. Ürünleri görmek için tıkla.'}</p>
-      <span>Ürünleri Gör</span>
-     </div>
-    </button>
-   })}
-  </section>
-
-  {active&&<section className="luxProducts">
-   <div className="luxProductsHead">
-    <div>
-     <span>SEÇİLİ KATEGORİ</span>
-     <h2>{active.type}</h2>
-     <p>{active.desc||'Bu kategorideki donate ürünleri.'}</p>
-    </div>
-    <Button onClick={()=>window.open(discordUrl,'_blank')}>Satın Almak İçin Discord</Button>
-   </div>
-
-   <div className="luxProductGrid">
-    {(active.products||[]).map((product,i)=>{
-     const img=product.image||(active.images||[])[i]||active.cover;
-     return <Card className="luxProductCard" key={(product.name||'urun')+i}>
-      {img?<img src={img} alt={product.name}/>:<div className="luxProductEmpty"><Star size={30}/></div>}
-      <div className="luxProductBody">
-       <small>{active.type}</small>
-       <h3>{product.name}</h3>
-       <p>{product.desc||'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}</p>
-       <Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button>
-      </div>
-     </Card>
-    })}
-    {(!active.products||active.products.length===0)&&<Card className="luxEmptyProducts">
-     <ShoppingCart size={34}/>
-     <h3>Bu kategoriye ürün eklenmedi</h3>
-     <p>Admin panelinden bu kategoriye donate araç/ürün kartı ekleyebilirsin.</p>
-    </Card>}
-   </div>
-  </section>}
+  <section className="luxMarketHero"><div className="luxHeroText"><span>YER6 DONATE MARKET</span><h1>LÜKS DONATE<br/><em>KOLEKSİYONU</em></h1><p>Kategorilere göz at, ürünleri panel şeklinde incele. Fiyat bilgisi sitede yazmaz; satın alma işlemi Discord üzerinden yapılır.</p><div className="luxMarketActions"><Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button><Button variant="ghost" onClick={()=>setPage('home')}>Ana Sayfaya Dön</Button></div></div><Card className="luxMarketInfo"><Crown size={42}/><h2>Fiyat Gizli Sistem</h2><p>Stok, teslimat ve fiyat bilgisi Discord üzerinden yetkili tarafından verilir.</p></Card></section>
+  <section className="luxCategoryGrid">{market.map((d,i)=>{const cover=d.cover||(d.products||[]).find(p=>p.image)?.image;return <Card className="luxCategoryCard" key={d.type+i}><div className="luxCategoryVisual">{cover?<img src={cover} alt={d.type}/>:<div className="luxNoImage"><ShoppingCart size={38}/></div>}<div className="luxCardShade"></div></div><div className="luxCategoryContent"><small>DONATE KATEGORİ</small><h2>{d.type}</h2><p>{d.desc}</p><Button onClick={()=>setSelected(d)}>Ürünleri Görüntüle</Button></div></Card>})}</section>
+  {selected&&<div className="marketModal"><Card className="marketModalCard"><div className="marketModalHead"><div><span>DONATE ÜRÜNLERİ</span><h2>{selected.type}</h2><p>{selected.desc}</p></div><button className="marketClose" onClick={()=>setSelected(null)}>×</button></div><div className="marketModalGrid">{(selected.products||[]).map((p,i)=><Card className="marketProductPanel" key={(p.name||'urun')+i}>{p.image?<img src={p.image} alt={p.name}/>:<div className="marketProductEmpty"><Star size={30}/></div>}<div><small>{selected.type}</small><h3>{p.name}</h3><p>{p.desc||'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}</p><Button onClick={()=>window.open(discordUrl,'_blank')}>Discord'dan Satın Al</Button></div></Card>)}{(!selected.products||selected.products.length===0)&&<Card className="marketProductPanel empty"><ShoppingCart size={34}/><h3>Bu kategoriye ürün eklenmedi</h3><p>Admin panelinden bu kategoriye ürün/kart ekleyebilirsin.</p></Card>}</div></Card></div>}
  </main></div>
 }
 
@@ -598,90 +525,9 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 </div></div>)}</Card>}
   {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>Ver Komutu</Button><Button variant="ghost" onClick={()=>copyText(wlRemoveCommand(p))}>Kaldır Komutu</Button></div></div>)}</Card>}
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
-  {active==='Donate Market'&&<div className="panelStack">
-    <Card className="panel">
-      <h2>Donate Market Yönetimi</h2>
-      <p className="muted">Kategori oluştur, ürün/kart ekle, fotoğraf linki gir. Sitede fiyat görünmez; her kart Discord satın alma butonuna yönlendirir.</p>
-      <Button onClick={()=>setEditDonate({type:'Yeni Donate Kategorisi',desc:'Özel donate kategorisi.',cover:'',items:[],images:['','','',''],products:[]})}>Yeni Kategori Oluştur</Button>
-    </Card>
-
-    <div className="donateAdminGrid">
-      {donate.map((d,idx)=>{
-        const cat=normalizeDonateCategory(d);
-        return <Card className="donateAdminCard" key={cat.type+idx}>
-          <div className="donateAdminCover">
-            {cat.cover ? <img src={cat.cover} alt={cat.type}/> : <ShoppingCart size={34}/>}
-          </div>
-          <div className="donateAdminBody">
-            <small>DONATE KATEGORİ</small>
-            <h2>{cat.type}</h2>
-            <p>{cat.desc}</p>
-            <b>{(cat.products||[]).length} ürün/kart</b>
-            <div className="actions">
-              <Button onClick={()=>setEditDonate(cat)}>Düzenle</Button>
-              <Button variant="ghost" onClick={async()=>{
-                if(!confirm(cat.type+' kategorisi silinsin mi?')) return;
-                if(cat.id) await supabase.from('donate_categories').delete().eq('id',cat.id);
-                setDonate(prev=>prev.filter((_,i)=>i!==idx));
-                await addDbLog('DONATE_DELETE', `${cat.type} silindi.`, admin.username);
-              }}>Sil</Button>
-            </div>
-          </div>
-        </Card>
-      })}
-    </div>
-  </div>}
-
-  {editDonate&&<div className="modal"><Card className="modalCard donateEditorModal">
-    <h2>Donate Kategori / Kart Editörü</h2>
-    <label>Kategori İsmi</label>
-    <Field value={editDonate.type} onChange={v=>setEditDonate({...editDonate,type:v})} placeholder="Örn: Donate Araçlar"/>
-    <label>Kategori Açıklaması</label>
-    <TextArea value={editDonate.desc||''} onChange={v=>setEditDonate({...editDonate,desc:v})} placeholder="Kategori açıklaması"/>
-    <label>Kategori Kapak Fotoğraf Linki</label>
-    <Field value={editDonate.cover||''} onChange={v=>setEditDonate({...editDonate,cover:v})} placeholder="https://...jpg / /images/arac.png"/>
-
-    <div className="donateEditorHead">
-      <h3>Ürün / Araç Kartları</h3>
-      <Button onClick={()=>setEditDonate({...editDonate,products:[...(editDonate.products||[]),{name:'Yeni Donate Ürünü',image:'',desc:'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}]})}>Kart Ekle</Button>
-    </div>
-
-    <div className="donateProductEditorList">
-      {(editDonate.products||[]).map((p,i)=><Card className="donateProductEditor" key={i}>
-        <div className="donateProductEditorPreview">
-          {p.image ? <img src={p.image} alt={p.name}/> : <Star size={26}/>}
-        </div>
-        <div>
-          <label>Kart İsmi</label>
-          <Field value={p.name} onChange={v=>{
-            const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],name:v};
-            setEditDonate({...editDonate,products:arr});
-          }} placeholder="Araç / ürün ismi"/>
-          <label>Fotoğraf Linki</label>
-          <Field value={p.image||''} onChange={v=>{
-            const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],image:v};
-            setEditDonate({...editDonate,products:arr});
-          }} placeholder="https://...jpg veya /images/arac.png"/>
-          <label>Açıklama</label>
-          <TextArea value={p.desc||''} onChange={v=>{
-            const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],desc:v};
-            setEditDonate({...editDonate,products:arr});
-          }} placeholder="Kısa açıklama"/>
-          <Button variant="ghost" onClick={()=>{
-            const arr=[...(editDonate.products||[])]; arr.splice(i,1);
-            setEditDonate({...editDonate,products:arr});
-          }}>Kartı Sil</Button>
-        </div>
-      </Card>)}
-    </div>
-
-    <div className="actions">
-      <Button onClick={saveDonate}>Kaydet</Button>
-      <Button variant="ghost" onClick={()=>setEditDonate(null)}>Kapat</Button>
-    </div>
-  </Card></div>}
-
-  {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
+  {active==='Donate Market'&&<div className="panelStack"><Card className="panel"><h2>Donate Market Yönetimi</h2><p className="muted">Kategori oluştur, araç/ürün kartı ekle, fotoğraf linki koy. Fiyat görünmez; satın alma butonu Discord'a yönlendirir.</p><Button onClick={()=>setEditDonate({type:'Yeni Donate Kategorisi',desc:'Özel donate kategorisi.',cover:'',items:[],images:['','','',''],products:[]})}>Yeni Kategori Oluştur</Button></Card><div className="donateAdminGrid">{donate.map((d,idx)=>{const cat=normalizeDonateCategory(d);return <Card className="donateAdminCard" key={cat.type+idx}><div className="donateAdminCover">{cat.cover?<img src={cat.cover} alt={cat.type}/>:<ShoppingCart size={34}/>}</div><div className="donateAdminBody"><small>DONATE KATEGORİ</small><h2>{cat.type}</h2><p>{cat.desc}</p><b>{(cat.products||[]).length} ürün/kart</b><div className="actions"><Button onClick={()=>setEditDonate(cat)}>Düzenle</Button><Button variant="ghost" onClick={async()=>{if(!confirm(cat.type+' kategorisi silinsin mi?'))return;if(cat.id)await supabase.from('donate_categories').delete().eq('id',cat.id);setDonate(prev=>prev.filter((_,i)=>i!==idx));await addDbLog('DONATE_DELETE',`${cat.type} silindi.`,admin.username);}}>Sil</Button></div></div></Card>})}</div></div>}
+ {editDonate&&<div className="modal"><Card className="modalCard donateEditorModal"><h2>Donate Kategori / Kart Editörü</h2><label>Kategori İsmi</label><Field value={editDonate.type||''} onChange={v=>setEditDonate({...editDonate,type:v})} placeholder="Örn: Donate Araçlar"/><label>Kategori Açıklaması</label><TextArea value={editDonate.desc||''} onChange={v=>setEditDonate({...editDonate,desc:v})} placeholder="Kategori açıklaması"/><label>Kategori Kapak Fotoğraf Linki</label><Field value={editDonate.cover||''} onChange={v=>setEditDonate({...editDonate,cover:v})} placeholder="https://...jpg veya /images/arac.png"/><div className="donateEditorHead"><h3>Kart / Araç Ürünleri</h3><Button onClick={()=>setEditDonate({...editDonate,products:[...(editDonate.products||[]),{name:'Yeni Araç / Ürün',image:'',desc:'Detay ve satın alma için Discord üzerinden yetkiliyle görüş.'}]})}>Kart Ekle</Button></div><div className="donateProductEditorList">{(editDonate.products||[]).map((p,i)=><Card className="donateProductEditor" key={i}><div className="donateProductEditorPreview">{p.image?<img src={p.image} alt={p.name}/>:<Star size={26}/>}</div><div><label>Kart İsmi</label><Field value={p.name||''} onChange={v=>{const arr=[...(editDonate.products||[])];arr[i]={...arr[i],name:v};setEditDonate({...editDonate,products:arr});}} placeholder="Araç / ürün ismi"/><label>Fotoğraf Linki</label><Field value={p.image||''} onChange={v=>{const arr=[...(editDonate.products||[])];arr[i]={...arr[i],image:v};setEditDonate({...editDonate,products:arr});}} placeholder="https://...jpg veya /images/arac.png"/><label>Açıklama</label><TextArea value={p.desc||''} onChange={v=>{const arr=[...(editDonate.products||[])];arr[i]={...arr[i],desc:v};setEditDonate({...editDonate,products:arr});}} placeholder="Kısa açıklama"/><Button variant="ghost" onClick={()=>{const arr=[...(editDonate.products||[])];arr.splice(i,1);setEditDonate({...editDonate,products:arr});}}>Kartı Sil</Button></div></Card>)}</div><div className="actions"><Button onClick={saveDonate}>Kaydet</Button><Button variant="ghost" onClick={()=>setEditDonate(null)}>Kapat</Button></div></Card></div>}
+    {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
   {editDonate&&<div className="modal"><Card className="modalCard"><h2>{editDonate.type} Düzenle</h2><TextArea value={editDonate.items.join(', ')} onChange={v=>setEditDonate({...editDonate,items:v.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Ürünler"/>
   <h3>Donate Fotoğrafları</h3>
   <p className="muted">Her kategori için en fazla 4 fotoğraf linki ekleyebilirsin. Örnek: /images/araba1.png veya https://...</p>
