@@ -362,3 +362,14 @@
     justify-content:flex-start;
   }
 }
+
+
+/* Founder action buttons fix */
+.staffActions .btn{
+  padding:10px 12px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.staffActions{
+  align-items:center;
+}

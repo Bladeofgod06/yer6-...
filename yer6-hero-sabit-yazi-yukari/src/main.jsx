@@ -111,18 +111,27 @@ function sortStaffByRank(list) {
 
 
 function canFounderManage(admin) {
-  return admin?.role === 'Founder';
+  return String(admin?.role || '').toLowerCase() === 'founder';
+}
+
+
+function findRankByLevel(level) {
+  return staffRanksDefault.find(r=>Number(r.level)===Number(level)) || null;
 }
 
 function nextLowerRank(role) {
   const current = getStaffLevel(role);
-  const lower = staffRanksDefault.filter(r=>r.level < current).sort((a,b)=>b.level-a.level)[0];
+  const lower = staffRanksDefault
+    .filter(r=>Number(r.level) < Number(current))
+    .sort((a,b)=>Number(b.level)-Number(a.level))[0];
   return lower || null;
 }
 
 function nextHigherRank(role) {
   const current = getStaffLevel(role);
-  const higher = staffRanksDefault.filter(r=>r.level > current).sort((a,b)=>a.level-b.level)[0];
+  const higher = staffRanksDefault
+    .filter(r=>Number(r.level) > Number(current))
+    .sort((a,b)=>Number(a.level)-Number(b.level))[0];
   return higher || null;
 }
 
@@ -178,7 +187,7 @@ async function sendDiscordLog(title, description) {
   } catch(e) { console.log('Discord webhook gönderilemedi', e); }
 }
 
-function Button({children,onClick,variant='red',className='',disabled=false}) { return <button disabled={disabled} onClick={onClick} className={`btn ${variant} ${className}`}>{children}</button> }
+function Button({children,onClick,variant='red',className='',disabled=false}) { return <button type="button" disabled={disabled} onClick={onClick} className={`btn ${variant} ${className}`}>{children}</button> }
 function Card({children,className=''}) { return <div className={`card ${className}`}>{children}</div> }
 function Field({value,onChange,placeholder,type='text'}) { return <input className="field" type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/> }
 function TextArea({value,onChange,placeholder}) { return <textarea className="textarea" value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/> }
@@ -402,11 +411,11 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
 function App(){
  const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
- const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v16')||'null')||starterAdmins);
+ const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v17')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
  const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||donateDefault);
- const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v16')||'null')||staffRanksDefault);
- const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v16')||'null')||staffMembersDefault);
+ const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v17')||'null')||staffRanksDefault);
+ const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v17')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
@@ -430,7 +439,7 @@ function App(){
 
 
  useEffect(()=>{
-  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V16','1');
+  localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V17','1');
   setStaffRanks(staffRanksDefault);
   setStaffMembers(prev=>{
     const fixed = (prev && prev.length ? prev : staffMembersDefault).map(x=>({
@@ -446,7 +455,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v17',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v17',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v17',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
  function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}
