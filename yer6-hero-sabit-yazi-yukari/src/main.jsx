@@ -56,12 +56,24 @@ const starterAdmins = [
 ];
 
 const donateDefault = [
-  { type:'Araba', items:['Mercedes S63 AMG','BMW X6 M','Audi RS7','Range Rover Sport','Porsche Panamera'], images:['','','',''] },
-  { type:'Ev', items:['Boğaz Villa','Şehir Dairesi','Lüks Rezidans','Garajlı Malikane'], images:['','','',''] },
-  { type:'Motor', items:['Yamaha R1','Ducati Panigale','BMW S1000RR','Harley Custom'], images:['','','',''] },
-  { type:'Boy', items:['Karakter boy paketi','Özel vücut ayarı','VIP görünüm'], images:['','','',''] },
-  { type:'Ped', items:['Özel Ped 1','Özel Ped 2','Özel kıyafet paketi'], images:['','','',''] },
-  { type:'Özel Paket', items:['Diamond VIP','Founder Destek','İşletme Paketi','Aile Paketi'], images:['','','',''] }
+  { type:'Donate Ped', items:['Özel Ped Paketi','Karakter Ped','VIP Ped','Limitli Ped'], images:['','','',''] },
+  { type:'Donate Boy', items:['Boy Paketi','Karakter Boy Ayarı','Özel Vücut Ayarı','VIP Görünüm'], images:['','','',''] },
+  { type:'Donate Mekanlar', items:['İşletme Mekanı','Özel Mekan','VIP Mekan','Aile Mekanı'], images:['','','',''] },
+  { type:'Donate Meslekler', items:['Özel Meslek','VIP Meslek','Meslek Paketi','İşletme Yetkisi'], images:['','','',''] },
+  { type:'Donate Malikaneler', items:['Boğaz Malikane','Lüks Villa','Garajlı Malikane','Özel Ev'], images:['','','',''] },
+  { type:'Donate Araçlar', items:['Standart Donate Araç','Spor Araç','SUV Araç','Özel Araç'], images:['','','',''] },
+  { type:'Donate VIP Araçlar', items:['VIP Araç 1','VIP Araç 2','VIP Araç 3','VIP Araç 4'], images:['','','',''] },
+  { type:'Donate İmzalı Boşta', items:['İmzalı Boş Araç','Özel Plaka Hazır','Limitli Araç','Özel Seri'], images:['','','',''] },
+  { type:'Donate İmzalanan Araçlar', items:['İmzalanmış Araç','Sahipli Araç','Özel Seri Araç','Limitli İmzalı'], images:['','','',''] },
+  { type:'Donate Araç Eklenti', items:['Araç Eklenti Paketi','Body Kit','Özel Jant','Araç Modifiye'], images:['','','',''] },
+  { type:'Donate Plaka', items:['Özel Plaka','İsimli Plaka','VIP Plaka','Limitli Plaka'], images:['','','',''] },
+  { type:'Donate Motor', items:['Yamaha R1','Ducati Panigale','BMW S1000RR','Harley Custom'], images:['','','',''] },
+  { type:'Donate Tekne Yatlar', items:['Tekne','Yat','Lüks Yat','Özel Deniz Aracı'], images:['','','',''] },
+  { type:'Donate Helikopter', items:['Helikopter','VIP Helikopter','Özel Hava Aracı','Limitli Helikopter'], images:['','','',''] },
+  { type:'Donate Silah', items:['Silah Paketi','Özel Silah','VIP Silah','Limitli Silah'], images:['','','',''] },
+  { type:'Donate Zırh', items:['Zırh Paketi','VIP Zırh','Özel Zırh','Koruma Paketi'], images:['','','',''] },
+  { type:'Donate Numara', items:['Özel Numara','VIP Numara','Kısa Numara','Limitli Numara'], images:['','','',''] },
+  { type:'Donate Özel Paket', items:['Diamond VIP','Founder Destek','Aile Paketi','Full Paket'], images:['','','',''] }
 ];
 
 const staffRankOrder = {
@@ -373,7 +385,7 @@ function App(){
  const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
  const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v16')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
- const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v11')||'null')||donateDefault);
+ const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||donateDefault);
  const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v16')||'null')||staffRanksDefault);
  const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v16')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
@@ -382,9 +394,20 @@ function App(){
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
 
  useEffect(()=>{
-  localStorage.setItem('YER6_DONATE_IMAGES_V11','1');
-  setDonate(prev=>(prev&&prev.length?prev:donateDefault).map(d=>({...d,images:(d.images||['','','','']).slice(0,4)})));
+  localStorage.setItem('YER6_DONATE_FULL_CATEGORIES_V12','1');
+  setDonate(prev=>{
+    const old = Array.isArray(prev) ? prev : [];
+    return donateDefault.map(def=>{
+      const found = old.find(x=>x.type===def.type);
+      return {
+        ...def,
+        items: found?.items?.length ? found.items : def.items,
+        images: (found?.images || def.images || ['','','','']).slice(0,4)
+      };
+    });
+  });
  },[]);
+
 
 
  useEffect(()=>{
@@ -404,7 +427,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v11',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v16',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v16',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v16',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
  function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}
