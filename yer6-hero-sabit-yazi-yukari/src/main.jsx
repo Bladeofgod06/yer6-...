@@ -222,10 +222,10 @@ function Logo() {
 }
 function Title({k,t,p}) { return <div className="title"><span>{k}</span><h1>{t}</h1><p>{p}</p></div> }
 
-function Header({setPage,openLogin}) {
+function Header({setPage,openLogin,currentUser,setAdmin,setPlayer}) {
  const [open,setOpen]=useState(false);
  const nav=[['home','Ana Sayfa'],['rules','Kurallar'],['staff','Yönetim Kadrosu'],['characters','Karakterler'],['game','Karakter Oyunu'],['market','Donate Market']];
- return <header className="header"><Logo/><nav className={open?'show':''}>{nav.map(([p,n])=><button key={p} onClick={()=>{setPage(p);setOpen(false)}}>{n}</button>)}</nav><div className="headButtons"><Button variant="ghost" onClick={()=>openLogin('admin')}>Giriş Yap</Button><Button onClick={()=>openLogin('register')}>Kayıt Ol</Button><button className="hamb" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></div></header>
+ return <header className="header"><Logo/><nav className={open?'show':''}>{nav.map(([p,n])=><button key={p} onClick={()=>{setPage(p);setOpen(false)}}>{n}</button>)}</nav><div className="headButtons">{currentUser?<><button className="accountPill" onClick={()=>setPage(currentUser.kind==='admin'?'admin':'player')}><UserPlus size={16}/> {currentUser.username}</button><Button variant="ghost" onClick={()=>{localStorage.removeItem('yer6_session');setAdmin&&setAdmin(null);setPlayer&&localStorage.removeItem('yer6_session');setPlayer(null);setPage('home')}}>Çıkış</Button></>:<><Button variant="ghost" onClick={()=>openLogin('admin')}>Giriş Yap</Button><Button onClick={()=>openLogin('register')}>Kayıt Ol</Button></>}<button className="hamb" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></div></header>
 }
 
 
@@ -274,7 +274,7 @@ function AiAssistant(){
  </div>
 }
 
-function HomePage({setPage,openLogin}) {
+function HomePage({setPage,openLogin,currentUser,setAdmin,setPlayer}) {
  const [slide,setSlide]=useState(0);
  
  const gallery=[
@@ -283,7 +283,7 @@ function HomePage({setPage,openLogin}) {
   {img:'yer6-street-life.png', title:'Sokak Hayatı'},
   {img:'yer6-lux-life.png', title:'Lüks Yaşam'}
  ];
- return <div className="site"><Header setPage={setPage} openLogin={openLogin}/>
+ return <div className="site"><Header setPage={setPage} openLogin={openLogin} currentUser={currentUser} setAdmin={setAdmin} setPlayer={setPlayer}/>
   <section className="hero">
    <img className="heroImg active" src="/images/yer6-main-hero.png" alt="YER6 Ana Hero"/><div className="heroDark"></div>
    <div className="heroText"><span>YER6 ROLEPLAY</span><h1>Bir Şehrin<br/><em>Yeni Hikayesi Başlıyor!</em></h1><p>Gerçekçi rol ortamı, aktif sistemler ve profesyonel yönetim kadrosuyla benzersiz bir deneyime katıl.</p><div className="heroButtons"><Button onClick={()=>openLogin('register')}><UserPlus size={18}/> Hemen Katıl</Button><Button variant="ghost" onClick={()=>window.open('https://discord.gg/ysewESgQm','_blank')}>Discord'da Katıl</Button></div></div>
@@ -403,7 +403,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
    <Logo/>
    <p>{player.username}</p>
    {menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}
-   <Button variant="ghost" onClick={()=>{setPlayer(null);setPage('home')}}>Çıkış</Button>
+   <Button variant="ghost" onClick={()=>{localStorage.removeItem('yer6_session');setPlayer(null);setPage('home')}}>Çıkış</Button>
   </aside>
   <main>
    <Title k="OYUNCU PANELİ" t={'Hoş geldin, '+player.username} p="Destek açabilir, yetkili başvurusu gönderebilir ve yetkililerle destek üzerinden konuşabilirsin."/>
@@ -502,7 +502,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
 
- return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
+ return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{localStorage.removeItem('yer6_session');setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Users/><div><span>Oyuncu</span><b>{players.length}</b></div></Card><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishments.length}</b></div></Card><Card className="stat"><Ticket/><div><span>Destek</span><b>{tickets.length}</b></div></Card></div>}
   {active==='Oyuncular'&&<Card className="panel"><h2>Oyuncular</h2>{players.length===0&&<p>Oyuncu yok.</p>}{players.map(p=><div className="row" key={p.discordId}><div><b>{p.username}</b><p>{p.discordId} • {p.wlStatus||'Aktif'}</p><small>{p.banReason||'Ceza yok'} {p.wlEndDate?('• Bitiş: '+(p.wlEndDate==='PERMA'?'PERMA':new Date(p.wlEndDate).toLocaleString('tr-TR'))):''}</small></div><Badge tone={p.wlStatus&&p.wlStatus!=='Aktif'?'bad':'good'}>{p.wlStatus||'Aktif'}</Badge></div>)}</Card>}
   {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><div className="actions staffActions"><Badge>{a.role}</Badge>{canFounderManage(admin)&&<><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</button></>}</div></div>)}</Card>}
@@ -550,6 +550,8 @@ function App(){
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
 
  useEffect(()=>{ loadSupabaseData(); },[]);
+ useEffect(()=>{ if(admin) localStorage.setItem('yer6_session',JSON.stringify({kind:'admin',user:admin})); },[admin]);
+ useEffect(()=>{ if(player) localStorage.setItem('yer6_session',JSON.stringify({kind:'player',user:player})); },[player]);
 
  async function loadSupabaseData(){
   try{
@@ -620,12 +622,13 @@ function App(){
   if(error || !data) return alert('Admin bilgileri yanlış.');
   const a=dbAdminToApp(data);
   setAdmin(a);
+  localStorage.setItem('yer6_session',JSON.stringify({kind:'admin',user:a}));
   setPage('admin');
   await addDbLog('ADMIN_LOGIN', `${a.username} giriş yaptı.`, a.username);
 }
  function loginPlayer(){const p=players.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!p)return alert('Kullanıcı adı veya şifre yanlış.');setPlayer(p);setPage('player')}
 
- if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
+ if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin} currentUser={admin?{kind:'admin',...admin}:player?{kind:'player',...player}:null} setAdmin={setAdmin} setPlayer={setPlayer}/>;
  if(page==='rules')return <RulesPage setPage={setPage} openLogin={openLogin}/>;
  if(page==='staff')return <StaffPage setPage={setPage} openLogin={openLogin} staffMembers={staffMembers}/>;
  if(page==='characters')return <CharactersPage setPage={setPage} openLogin={openLogin}/>;
@@ -634,6 +637,6 @@ function App(){
  if(page==='login')return <LoginPage setPage={setPage} mode={mode} setMode={setMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
  if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs}/>;
  if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs}/>;
- return <HomePage setPage={setPage} openLogin={openLogin}/>
+ return <HomePage setPage={setPage} openLogin={openLogin} currentUser={admin?{kind:'admin',...admin}:player?{kind:'player',...player}:null} setAdmin={setAdmin} setPlayer={setPlayer}/>
 }
 createRoot(document.getElementById('root')).render(<App/>);
