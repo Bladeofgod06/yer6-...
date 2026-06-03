@@ -3,6 +3,25 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {Home, Menu, X, UserPlus, Search, Users, ShieldCheck, Ticket, Bell, Ban, Car, House, Zap, Crown, Star, ShoppingCart, Gamepad2, Instagram, Youtube, AlertTriangle, ClipboardList, Send, Clock, CheckCircle, XCircle, Bot, MessageCircle} from 'lucide-react';
 import './style.css';
+import { createClient } from '@supabase/supabase-js';
+
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+const dbPlayerToApp = (p) => ({ username:p.username, discordId:p.discord_id, password:p.password, steam:p.steam||'', wlStatus:p.wl_status||'Aktif', wlEndDate:p.wl_end_date||'', banReason:p.ban_reason||'' });
+const dbAdminToApp = (a) => ({ username:a.username, discordId:a.discord_id, password:a.password, role:a.role, level:a.level });
+const dbStaffToApp = (s) => ({ name:s.name, discordId:s.discord_id, rank:s.rank, level:s.level, duty:s.duty||'', status:s.status||'Aktif', image:s.image||'' });
+const dbDonateToApp = (d) => ({ id:d.id, type:d.type, items:d.items||[], images:d.images||['','','',''] });
+const dbAppToApp = (a) => ({ id:a.id, username:a.username, discordId:a.discord_id, name:a.name, age:a.age, experience:a.experience, reason:a.reason, status:a.status||'Bekliyor', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
+const dbPunishmentToApp = (p) => ({ id:String(p.id), targetType:p.target_type, targetId:p.target_id, targetName:p.target_name, rule:p.rule, penalty:p.penalty, proof:p.proof, note:p.note, endDate:p.end_date, status:p.status, by:p.by_admin, createdAt:p.created_at ? new Date(p.created_at).toLocaleString('tr-TR') : now() });
+const dbTicketToApp = (t) => ({ id:String(t.id), dbId:t.id, username:t.username, discordId:t.discord_id, type:t.type, title:t.title, description:t.description||'', proof:t.proof||'', state:t.state||'Açık', assigned:t.assigned||'Boşta', createdAt:t.created_at ? new Date(t.created_at).toLocaleString('tr-TR') : now(), messages:(t.ticket_messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(m=>({by:m.sender, role:m.role, text:m.message, time:m.created_at ? new Date(m.created_at).toLocaleString('tr-TR') : now()})) });
+
+async function addDbLog(action, detail, actor='SYSTEM'){
+  try{ await supabase.from('logs').insert({actor, action, detail}); }catch(e){ console.log(e); }
+}
 
 const rules = [["Ailevi Değerlere Küfür (ADK)", "3 Gün WL", "Ağır", "Saygı"], ["Aktif Rolde Desteğe Çıkmak", "4x Uyarı", "Orta", "Destek"], ["Aile Kıyafet Kurallarına Uymamak / Claimsiz Gezmek", "3x Uyarı", "Orta", "Aile"], ["Başka Ailenin Claimini Kullanmak", "1 Gün WL", "Ağır", "Aile"], ["Badcop (BC)", "2 Gün WL + İhraç + CK", "Ağır", "Devlet"], ["Bug Abuse", "3 Gün WL", "Ağır", "Abuse"], ["Pit Demirsiz Araçla Pit Atmak", "4x Uyarı", "Orta", "Araç"], ["Polisin 5 Dakika Dolmadan Pit Atması", "3x Uyarı", "Orta", "Polis"], ["Polis Bayıltma / Öldürme Durumlarında Pit Kuralı Geçersizdir", "Bilgilendirme", "Not", "Polis"], ["Polis Kıyafeti Giymek (Sivil)", "3 Gün WL", "Ağır", "Devlet"], ["Power Gaming", "1 Gün WL", "Ağır", "RP"], ["Polis Soymak / Teçhizatlarını Almak / Legal Itemleri Almak veya Kullanmak", "4x Uyarı", "Orta", "Devlet"], ["RDM", "1 Gün WL", "Ağır", "Combat"], ["Refuse RP", "1 Gün WL", "Ağır", "RP"], ["Retarded RP", "3x Uyarı", "Orta", "RP"], ["Revenge Kill", "1 Gün WL", "Ağır", "Combat"], ["Rol Baltalama", "1 Gün WL", "Ağır", "RP"], ["Rol Block Uymamak", "1 Gün WL", "Ağır", "RP"], ["Rol Check", "1 Gün WL", "Ağır", "RP"], ["Rol Clear'ı Hatırlamak", "1 Gün WL", "Ağır", "RP"], ["Rolde OOC Konuşmak", "4x Uyarı", "Orta", "OOC"], ["Sincap, 3 Bacaklı, Travesti vb. saçma hitaplarla rol baltalamak", "5 Gün WL", "Ağır", "Saygı"], ["Sarı Sayfalarda 30 Dakika Geçmeden İlan Atmak", "1x Uyarı", "Hafif", "Sarı Sayfa"], ["Sağlık Çalışanına Fiziksel Şiddet / Rehin Almak", "4x Uyarı", "Orta", "EMS"], ["SS Dışında Adam Soymak", "4x Uyarı", "Orta", "Soygun"], ["Soygunda Polis Gelmeden Gitmek (ATM/Ev Hariç)", "4x Uyarı", "Orta", "Soygun"], ["Sunucuya Küfür", "PERMA", "Perma", "Saygı"], ["Tehdit / Şantaj / Data Sorgusu / Sanal Mafyacılık / Panel Muhabbetleri", "PERMA", "Perma", "Saygı"], ["Triggerlamak", "1 Gün WL", "Ağır", "RP"], ["Üniformalı Polisi 30+ Dakika Esir Tutmak", "3x Uyarı", "Orta", "Devlet"], ["VDM", "1 Gün WL", "Ağır", "Combat"], ["Araçtaki silahsız ve zor durumdaki kişi 1 kez araçla çarpıp kaçabilir", "VDM Sayılmaz", "Not", "Combat"], ["Yanlış /ME ve /DO Kullanımı", "3x Uyarı", "Orta", "Komut"], ["Yayıncıları Ghostlamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yayıncının Yayınını Baltalamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yetkiliyi Kandırmak", "2 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Ağır Hakaret", "4 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Hakaret", "1 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye “Melek” vb. Demek", "4x Uyarı", "Orta", "Yetkili"], ["WL Cezası Varken Oyuna Girmek / Quit Atıp Geri Sunucuya Girmek", "1 Gün WL", "Ağır", "WL"], ["Uyarılar 2 Haftada 1 Silinmektedir", "Not", "Not", "Notlar"], ["5x Uyarı 1 Gün WL'ye Dönüşür", "Not", "Not", "Notlar"], ["Kaliteli rol deneyimi için kurallar sıkı hale getirilmiştir", "İyi Roller", "Not", "Notlar"], ["Combatlog", "2 Gün WL + Envanter SİLİNECEK", "Ağır", "Combat"], ["Combatlog Timeout / Crash Durumu", "Kayıtlı kanıtlı şekilde destekte sunulmalıdır", "Not", "Combat"], ["Crash-bildirip geri role giremeyecek durumlar kanıtlı sunulmalıdır", "Not", "Not", "Combat"], ["Copbait (Normal)", "3x Uyarı", "Orta", "Polis"], ["Copbait (Rol Baltalama)", "2 Gün WL", "Ağır", "Polis"], ["Destekte Yetkiliye Saygısızlık/Küfür", "1 Gün WL", "Ağır", "Destek"], ["Destekte Karşı Tarafa Saygısızlık", "3x Uyarı", "Orta", "Destek"], ["Dini Değerlere Küfür (DDK)", "PERMA", "Perma", "Saygı"], ["Donate Araç/Motor ile Soygun Yapmak", "2x Uyarı", "Orta", "Donate"], ["Dolandırıcılık Rolü", "4x Uyarı", "Orta", "Rol"], ["Dupe (Eşya / Silah Çoğaltma)", "PERMA", "Perma", "Abuse"], ["Etkinlik Baltalamak", "4x Uyarı + Kick + Devamında 1 Gün WL", "Ağır", "Etkinlik"], ["Fail RP", "4x Uyarı", "Orta", "RP"], ["Fear RP", "4x Uyarı", "Orta", "RP"], ["Force RP", "4x Uyarı", "Orta", "RP"], ["Gang Up", "1 Gün WL", "Ağır", "İllegal"], ["Gang Up Açıklaması", "Ailelerde illegal kurallara bakılır. Sivilde en fazla 5 kişi birlikte rol yapabilir.", "Not", "İllegal"], ["6. kişi girdiğinde kişisel Gang Up işlemi uygulanır", "Not", "Not", "İllegal"], ["Gereksiz Agresif Başlatmak / Devam Ettirmek", "4x Uyarı", "Orta", "Agresif"], ["Güvenli Bölgede Adam Kaçırmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölge dışındaki rolü güvenli bölgede devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli bölgede küfürleşmek, sövüşmek, agresifi devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölgeye Dışarıdan Ateş Etmek", "1 Gün WL", "Ağır", "Güvenli Bölge"], ["Güvenli Bölgede Agresif Rol Başlatmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Hile / 3. Parti Yazılım Kullanımı", "PERMA", "Perma", "Hile"], ["IC/OOC Mixing", "1 Gün WL", "Ağır", "OOC"], ["IC/OOC Mixing Açıklaması", "Discord kanalları veya IC olarak sunucu içinde yapılan OOC konuşmalar işlem sebebidir", "Not", "OOC"], ["ILLEGAL RPF 1. Tespit", "Sözlü Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 2. Tespit", "1x İllegal Uyarı + 3x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 3. Tespit", "2x İllegal Uyarı + 4x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 4. Tespit", "PERMA BAN", "İllegal RPF", "İllegal RPF"], ["İllegal/Legal Yasağı Kuralını Çiğnemek", "1 Gün WL", "Ağır", "İllegal"], ["İzinsiz “E” Çekmek", "3x Uyarı", "Orta", "İllegal"], ["İzinsiz ERP", "1 Gün WL", "Ağır", "Rol"], ["İzinsiz Soygun (Banka / Kuyumcu)", "1 Gün WL", "Ağır", "Soygun"], ["Kadın Oyuncuya Cinsel Hakaret", "2 Gün WL", "Ağır", "Saygı"], ["Kadın Oyuncuya Taciz", "PERMA", "Perma", "Saygı"], ["Kamu Alanında Triggerlamak", "3x Uyarı", "Orta", "RP"], ["Kaza Rolüne Girmemek", "3x Uyarı", "Orta", "Araç"], ["Kenevir/Meth Bölgesine Siren Açıp Girmek", "4x Uyarı", "Orta", "İllegal"], ["Low RP", "2 Gün WL", "Ağır", "RP"], ["Maskesiz Soygun", "2x Uyarı", "Orta", "Soygun"], ["Meta Gaming", "2 Gün WL", "Ağır", "RP"], ["Milli Değerlere Küfür (MDK)", "PERMA", "Perma", "Saygı"], ["NLR (New Life Rule)", "1 Gün WL", "Ağır", "RP"], ["NLR Açıklaması", "CK yedikten sonra önceki hayatını hatırlamak yasaktır", "Not", "RP"], ["Non-RP Driving", "4x Uyarı", "Orta", "Araç"], ["OOC Kin", "4x Uyarı", "Orta", "OOC"], ["Devlet Araçlarını Çalmak", "3x Uyarı", "Orta", "Devlet"], ["Devlet Araçları Açıklaması", "Polis, Ambulans ve Adalet Bakanlığı araçlarını çalmak yasaktır", "Not", "Devlet"]].map(([name, penalty, level, category], id) => ({ id: id + 1, name, penalty, level, category }));
 const staffRanksDefault = [
@@ -320,39 +339,46 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
  const myApp=apps.find(a=>String(a.discordId)===String(player.discordId));
  const myPunishments=punishments.filter(p=>String(p.targetId)===String(player.discordId));
 
- function addTicket() {
+ async function addTicket() {
   if(!ticket.title||!ticket.description) return alert('Başlık ve açıklama gerekli.');
-  const item={
-    ...ticket,
-    id:'TICKET-'+Math.floor(Math.random()*90000+10000),
-    discordId:player.discordId,
-    username:player.username,
-    state:'Açık',
-    assigned:'Boşta',
-    createdAt:now(),
-    messages:[{by:player.username,role:'Oyuncu',text:ticket.description,time:now()}]
-  };
+  const { data, error } = await supabase.from('tickets').insert({
+    username:player.username, discord_id:player.discordId, type:ticket.type, title:ticket.title,
+    description:ticket.description, proof:ticket.proof||'', state:'Açık', assigned:'Boşta'
+  }).select().single();
+  if(error) return alert('Destek hatası: '+error.message);
+  await supabase.from('ticket_messages').insert({ticket_id:data.id, sender:player.username, role:'Oyuncu', message:ticket.description});
+  const item=dbTicketToApp({...data,ticket_messages:[{sender:player.username,role:'Oyuncu',message:ticket.description,created_at:new Date().toISOString()}]});
   setTickets(p=>[item,...p]);
   setLogs(p=>[now()+' - destek açıldı: '+item.id,...p]);
-  sendDiscordLog('Yeni Destek Talebi',`${item.username} destek açtı: ${item.title}`);
+  await addDbLog('TICKET_CREATE', `${player.username} destek açtı: ${ticket.title}`, player.username);
   setTicket({type:'Oyuncu Şikayet',title:'',description:'',proof:''});
   setActive('Taleplerim');
  }
 
- function addTicketReply(id){
+ async function addTicketReply(id){
   if(!replyText.trim()) return alert('Mesaj yazmalısın.');
-  setTickets(prev=>prev.map(t=>t.id===id?{...t,messages:[...(t.messages||[]),{by:player.username,role:'Oyuncu',text:replyText,time:now()}]}:t));
+  const t=tickets.find(x=>String(x.id)===String(id));
+  const ticketId=t?.dbId||id;
+  const { error } = await supabase.from('ticket_messages').insert({ticket_id:ticketId, sender:player.username, role:'Oyuncu', message:replyText});
+  if(error) return alert('Mesaj hatası: '+error.message);
+  setTickets(prev=>prev.map(t=>String(t.id)===String(id)?{...t,messages:[...(t.messages||[]),{by:player.username,role:'Oyuncu',text:replyText,time:now()}]}:t));
   setLogs(p=>[now()+' - oyuncu destek mesajı yazdı: '+id,...p]);
+  await addDbLog('TICKET_MESSAGE', `${id} oyuncu mesajı`, player.username);
   setReplyText('');
  }
 
- function sendApp() {
+ async function sendApp() {
   if(myApp) return alert('Bu hesap daha önce başvuru göndermiş.');
   if(!app.name||!app.reason) return alert('Ad ve başvuru nedeni gerekli.');
-  const item={...app,discordId:player.discordId,username:player.username,status:'Bekliyor',createdAt:now()};
+  const { data, error } = await supabase.from('applications').insert({
+    username:player.username, discord_id:player.discordId, name:app.name, age:app.age,
+    experience:app.experience, reason:app.reason, status:'Bekliyor'
+  }).select().single();
+  if(error) return alert('Başvuru hatası: '+error.message);
+  const item=dbAppToApp(data);
   setApps(p=>[item,...p]);
   setLogs(p=>[now()+' - yetkili başvurusu: '+player.username,...p]);
-  sendDiscordLog('Yeni Yetkili Başvurusu',`${player.username} başvuru gönderdi.`);
+  await addDbLog('APPLICATION_CREATE', `${player.username} başvuru gönderdi.`, player.username);
  }
 
  const menu=['Destek Aç','Taleplerim','Yetkili Başvuru','Profilim'];
@@ -387,67 +413,75 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  const rank=staffRanks.find(r=>r.rank===newAdmin.role)||staffRanks[0];
  const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Destekler','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
 
- function addAdmin(){if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');setAdmins(p=>[{...newAdmin,role:rank.rank,level:getStaffLevel(rank.rank)},...p]);setNewAdmin({username:'',discordId:'',password:'',role:'Lead Admin'})}
- function addStaff(){if(!newStaff.name||!newStaff.discordId||!newStaff.rank)return alert('Yetkili adı, Discord ID ve rank gerekli.');setStaffMembers(p=>[{...newStaff, level:getStaffLevel(newStaff.rank)},...p]);setNewStaff({name:'',discordId:'',rank:'Lead Admin',duty:'',status:'Aktif',image:''});setLogs(p=>[now()+' - yönetim kadrosuna yetkili eklendi: '+newStaff.name,...p])}
- function closeTicket(id){setTickets(p=>p.map(t=>t.id===id?{...t,state:'Kapalı'}:t));setLogs(p=>[now()+' - destek kapatıldı: '+id,...p]);sendDiscordLog('Destek Kapatıldı',id+' kapatıldı.')}
- function assignTicket(id){setTickets(p=>p.map(t=>t.id===id?{...t,state:'İncelemede',assigned:admin.username}:t));setLogs(p=>[now()+' - destek üstlenildi: '+id,...p])}
- function addAdminTicketReply(id){if(!staffReply.trim())return alert('Mesaj yazmalısın.');setTickets(p=>p.map(t=>t.id===id?{...t,messages:[...(t.messages||[]),{by:admin.username,role:'Yetkili',text:staffReply,time:now()}],state:t.state==='Açık'?'İncelemede':t.state,assigned:t.assigned==='Boşta'?admin.username:t.assigned}:t));setLogs(p=>[now()+' - yetkili destek mesajı yazdı: '+id,...p]);setStaffReply('')}
- function appResult(i,result){setApps(p=>p.map((a,idx)=>idx===i?{...a,status:result}:a));setLogs(p=>[now()+' - başvuru '+result,...p]);sendDiscordLog('Yetkili Başvurusu '+result,(apps[i]?.username||'Oyuncu')+' başvurusu '+result)}
- function addPunishment(){
-  if(!punish.targetId||!punish.rule||!punish.penalty)return alert('Discord ID, kural ve ceza gerekli.');
-  const endDate=makeEndDate(punish.penalty);
-  const item={...punish,id:'CEZA-'+Math.floor(Math.random()*90000+10000),by:admin.username,createdAt:now(),endDate,status:'Aktif'};
-  setPunishments(p=>[item,...p]);
-  if(punish.targetType==='Oyuncu') setPlayers(p=>p.map(x=>String(x.discordId)===String(punish.targetId)?{...x,wlStatus:endDate==='PERMA'?'PERMA':'WL Alındı',wlEndDate:endDate,banReason:punish.rule}:x));
-  setLogs(p=>[now()+' - ceza verildi: '+item.targetId+' / '+item.rule,...p]);
-  sendDiscordLog('Yeni Ceza / WL İşlemi',`${item.targetType}: ${item.targetId}\nKural: ${item.rule}\nCeza: ${item.penalty}\nWL Bitiş: ${item.endDate==='PERMA'?'PERMA':item.endDate?new Date(item.endDate).toLocaleString('tr-TR'):'Yok'}\nYetkili: ${admin.username}`);
-  setPunish({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
- }
+ async function addAdmin(){
+ if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');
+ const {data,error}=await supabase.from('admins').insert({username:newAdmin.username,discord_id:newAdmin.discordId,password:newAdmin.password,role:rank.rank,level:getStaffLevel(rank.rank)}).select().single();
+ if(error)return alert('Yetkili ekleme hatası: '+error.message);
+ const item=dbAdminToApp(data); setAdmins(p=>[item,...p]); setNewAdmin({username:'',discordId:'',password:'',role:'Lead Admin'});
+ await addDbLog('ADMIN_ADD', `${item.username} yetkili eklendi.`, admin.username);
+}
+ async function addStaff(){
+ if(!newStaff.name||!newStaff.discordId||!newStaff.rank)return alert('Yetkili adı, Discord ID ve rank gerekli.');
+ const {data,error}=await supabase.from('staff_members').insert({name:newStaff.name,discord_id:newStaff.discordId,rank:newStaff.rank,level:getStaffLevel(newStaff.rank),duty:newStaff.duty||'',status:newStaff.status||'Aktif',image:newStaff.image||''}).select().single();
+ if(error)return alert('Kadro ekleme hatası: '+error.message);
+ const item=dbStaffToApp(data); setStaffMembers(p=>[item,...p]); setNewStaff({name:'',discordId:'',rank:'Lead Admin',duty:'',status:'Aktif',image:''});
+ await addDbLog('STAFF_ADD', `${item.name} kadroya eklendi.`, admin.username);
+}
+ async function closeTicket(id){const t=tickets.find(x=>String(x.id)===String(id));await supabase.from('tickets').update({state:'Kapalı'}).eq('id',t?.dbId||id);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,state:'Kapalı'}:x));await addDbLog('TICKET_CLOSE', `${id} kapatıldı.`, admin.username);}
+ async function assignTicket(id){const t=tickets.find(x=>String(x.id)===String(id));await supabase.from('tickets').update({state:'İncelemede',assigned:admin.username}).eq('id',t?.dbId||id);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,state:'İncelemede',assigned:admin.username}:x));await addDbLog('TICKET_ASSIGN', `${id} üstlenildi.`, admin.username);}
+ async function addAdminTicketReply(id){if(!staffReply.trim())return alert('Mesaj yazmalısın.');const t=tickets.find(x=>String(x.id)===String(id));const {error}=await supabase.from('ticket_messages').insert({ticket_id:t?.dbId||id,sender:admin.username,role:'Yetkili',message:staffReply});if(error)return alert('Mesaj hatası: '+error.message);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,messages:[...(x.messages||[]),{by:admin.username,role:'Yetkili',text:staffReply,time:now()}],state:x.state==='Açık'?'İncelemede':x.state,assigned:x.assigned==='Boşta'?admin.username:x.assigned}:x));await addDbLog('TICKET_MESSAGE', `${id} yetkili mesajı`, admin.username);setStaffReply('');}
+ async function appResult(i,result){const a=apps[i];if(a?.id)await supabase.from('applications').update({status:result}).eq('id',a.id);setApps(p=>p.map((x,idx)=>idx===i?{...x,status:result}:x));await addDbLog('APPLICATION_RESULT', `${a?.username||'Oyuncu'} ${result}`, admin.username);}
+ async function addPunishment(){
+ if(!punish.targetId||!punish.rule||!punish.penalty)return alert('Discord ID, kural ve ceza gerekli.');
+ const endDate=makeEndDate(punish.penalty);
+ const {data,error}=await supabase.from('punishments').insert({target_type:punish.targetType,target_id:punish.targetId,target_name:punish.targetName,rule:punish.rule,penalty:punish.penalty,proof:punish.proof,note:punish.note,end_date:endDate,status:'Aktif',by_admin:admin.username}).select().single();
+ if(error)return alert('Ceza kaydı hatası: '+error.message);
+ const item=dbPunishmentToApp(data); setPunishments(p=>[item,...p]);
+ if(punish.targetType==='Oyuncu'){await supabase.from('players').update({wl_status:endDate==='PERMA'?'PERMA':'WL Alındı',wl_end_date:endDate,ban_reason:punish.rule}).eq('discord_id',punish.targetId);setPlayers(p=>p.map(x=>String(x.discordId)===String(punish.targetId)?{...x,wlStatus:endDate==='PERMA'?'PERMA':'WL Alındı',wlEndDate:endDate,banReason:punish.rule}:x));}
+ await addDbLog('PUNISHMENT_CREATE', `${item.targetId} ceza aldı: ${item.rule}`, admin.username);
+ setPunish({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
+}
  function finishPunishment(id){const p=punishments.find(x=>x.id===id);setPunishments(all=>all.map(x=>x.id===id?{...x,status:'Bitti'}:x));if(p?.targetType==='Oyuncu')setPlayers(all=>all.map(x=>String(x.discordId)===String(p.targetId)?{...x,wlStatus:'Aktif',wlEndDate:'',banReason:''}:x));sendDiscordLog('Ceza Bitti / WL Geri Verildi',`${p?.targetId} için ceza bitirildi.`)}
- function saveDonate(){setDonate(p=>p.map(d=>d.type===editDonate.type?{...editDonate,images:(editDonate.images||[]).slice(0,4)}:d));setEditDonate(null)}
+ async function saveDonate(){const payload={items:editDonate.items,images:(editDonate.images||[]).slice(0,4)};if(editDonate.id)await supabase.from('donate_categories').update(payload).eq('id',editDonate.id);setDonate(p=>p.map(d=>d.type===editDonate.type?{...editDonate,...payload}:d));setEditDonate(null);await addDbLog('DONATE_UPDATE', `${editDonate.type} güncellendi.`, admin.username);}
 
- function removeAdminOnlyFounder(discordId){
+ async function removeAdminOnlyFounder(discordId){
   if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
-  const id=String(discordId);
-  const target=admins.find(a=>String(a.discordId)===id);
-  if(!target) return alert('Yetkili bulunamadı.');
-  if(String(admin.discordId)===id) return alert('Kendi hesabını silemezsin.');
+  const id=String(discordId); const target=admins.find(a=>String(a.discordId)===id);
+  if(!target) return alert('Yetkili bulunamadı.'); if(String(admin.discordId)===id) return alert('Kendi hesabını silemezsin.');
   if(!confirm(`${target.username} adlı yetkili kaldırılacak. Emin misin?`)) return;
+  await supabase.from('admins').delete().eq('discord_id',id);
   setAdmins(prev=>prev.filter(a=>String(a.discordId)!==id));
-  setLogs(prev=>[now()+' - Founder yetkili kaldırdı: '+target.username+' / '+target.role,...prev]);
+  await addDbLog('ADMIN_DELETE', `${target.username} kaldırıldı.`, admin.username);
  }
 
- function removeStaffOnlyFounder(discordId){
+ async function removeStaffOnlyFounder(discordId){
   if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
-  const id=String(discordId);
-  const target=staffMembers.find(s=>String(s.discordId)===id);
+  const id=String(discordId); const target=staffMembers.find(s=>String(s.discordId)===id);
   if(!target) return alert('Kadro bulunamadı.');
   if(!confirm(`${target.name} yönetim kadrosundan kaldırılacak. Emin misin?`)) return;
+  await supabase.from('staff_members').delete().eq('discord_id',id);
   setStaffMembers(prev=>prev.filter(s=>String(s.discordId)!==id));
-  setLogs(prev=>[now()+' - Founder kadrodan kaldırdı: '+target.name+' / '+target.rank,...prev]);
+  await addDbLog('STAFF_DELETE', `${target.name} kaldırıldı.`, admin.username);
  }
 
- function changeAdminRankOnlyFounder(discordId,direction){
+ async function changeAdminRankOnlyFounder(discordId,direction){
   if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
-  const id=String(discordId);
-  const target=admins.find(a=>String(a.discordId)===id);
-  if(!target) return alert('Yetkili bulunamadı.');
-  if(String(admin.discordId)===id && direction==='down') return alert('Kendi Founder yetkini düşüremezsin.');
-  const next=direction==='up' ? nextHigherRank(target.role) : nextLowerRank(target.role);
-  if(!next) return alert('Bu yönde geçilecek yetki yok.');
-  setAdmins(prev=>prev.map(a=>String(a.discordId)===id ? {...a, role:next.rank, level:next.level} : a));
-  setLogs(prev=>[now()+` - Founder yetki ${direction==='up'?'yükseltti':'düşürdü'}: ${target.username} / ${target.role} -> ${next.rank}`,...prev]);
+  const id=String(discordId); const target=admins.find(a=>String(a.discordId)===id);
+  if(!target) return alert('Yetkili bulunamadı.'); if(String(admin.discordId)===id && direction==='down') return alert('Kendi Founder yetkini düşüremezsin.');
+  const next=direction==='up'?nextHigherRank(target.role):nextLowerRank(target.role); if(!next) return alert('Bu yönde geçilecek yetki yok.');
+  await supabase.from('admins').update({role:next.rank,level:next.level}).eq('discord_id',id);
+  setAdmins(prev=>prev.map(a=>String(a.discordId)===id?{...a,role:next.rank,level:next.level}:a));
+  await addDbLog('ADMIN_RANK_UPDATE', `${target.username}: ${target.role} -> ${next.rank}`, admin.username);
  }
 
- function changeStaffRankOnlyFounder(discordId,direction){
+ async function changeStaffRankOnlyFounder(discordId,direction){
   if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
-  const id=String(discordId);
-  const target=staffMembers.find(s=>String(s.discordId)===id);
+  const id=String(discordId); const target=staffMembers.find(s=>String(s.discordId)===id);
   if(!target) return alert('Kadro bulunamadı.');
-  const next=direction==='up' ? nextHigherRank(target.rank) : nextLowerRank(target.rank);
-  if(!next) return alert('Bu yönde geçilecek yetki yok.');
-  setStaffMembers(prev=>prev.map(s=>String(s.discordId)===id ? {...s, rank:next.rank, level:next.level} : s));
-  setLogs(prev=>[now()+` - Founder kadro yetkisi ${direction==='up'?'yükseltti':'düşürdü'}: ${target.name} / ${target.rank} -> ${next.rank}`,...prev]);
+  const next=direction==='up'?nextHigherRank(target.rank):nextLowerRank(target.rank); if(!next) return alert('Bu yönde geçilecek yetki yok.');
+  await supabase.from('staff_members').update({rank:next.rank,level:next.level}).eq('discord_id',id);
+  setStaffMembers(prev=>prev.map(s=>String(s.discordId)===id?{...s,rank:next.rank,level:next.level}:s));
+  await addDbLog('STAFF_RANK_UPDATE', `${target.name}: ${target.rank} -> ${next.rank}`, admin.username);
  }
 
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
@@ -495,7 +529,36 @@ function App(){
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
+ 
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
+
+ useEffect(()=>{ loadSupabaseData(); },[]);
+
+ async function loadSupabaseData(){
+  try{
+    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,punishRes,donateRes,logsRes]=await Promise.all([
+      supabase.from('admins').select('*').order('level',{ascending:false}),
+      supabase.from('players').select('*').order('created_at',{ascending:false}),
+      supabase.from('staff_ranks').select('*').order('level',{ascending:true}),
+      supabase.from('staff_members').select('*').order('level',{ascending:false}),
+      supabase.from('tickets').select('*, ticket_messages(*)').order('created_at',{ascending:false}),
+      supabase.from('applications').select('*').order('created_at',{ascending:false}),
+      supabase.from('punishments').select('*').order('created_at',{ascending:false}),
+      supabase.from('donate_categories').select('*').order('id',{ascending:true}),
+      supabase.from('logs').select('*').order('created_at',{ascending:false}).limit(250)
+    ]);
+    if(!adminsRes.error && adminsRes.data?.length) setAdmins(adminsRes.data.map(dbAdminToApp));
+    if(!playersRes.error) setPlayers((playersRes.data||[]).map(dbPlayerToApp));
+    if(!ranksRes.error && ranksRes.data?.length) setStaffRanks(ranksRes.data.map(r=>({level:r.level,rank:r.rank})));
+    if(!staffRes.error && staffRes.data?.length) setStaffMembers(staffRes.data.map(dbStaffToApp));
+    if(!ticketsRes.error) setTickets((ticketsRes.data||[]).map(dbTicketToApp));
+    if(!appsRes.error) setApps((appsRes.data||[]).map(dbAppToApp));
+    if(!punishRes.error) setPunishments((punishRes.data||[]).map(dbPunishmentToApp));
+    if(!donateRes.error && donateRes.data?.length) setDonate(donateRes.data.map(dbDonateToApp));
+    if(!logsRes.error) setLogs((logsRes.data||[]).map(l=>`${l.created_at ? new Date(l.created_at).toLocaleString('tr-TR') : ''} - ${l.actor||'SYSTEM'} - ${l.action}: ${l.detail||''}`));
+  }catch(e){ console.log('Supabase veri çekme hatası', e); }
+ }
+
 
  useEffect(()=>{
   localStorage.setItem('YER6_DONATE_FULL_CATEGORIES_V12','1');
@@ -534,8 +597,15 @@ function App(){
  useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
  function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
- function loginAdmin(){const a=admins.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!a)return alert('Kullanıcı adı veya şifre yanlış.');setAdmin(a);setPage('admin');setLogs(p=>[now()+' - admin girişi: '+a.username,...p])}
- function registerPlayer(){if(!auth.username||!auth.discordId||!auth.password)return alert('Kullanıcı adı, Discord ID ve şifre zorunlu.');const p={...auth,status:'Onaylandı',wlStatus:'Aktif',wlEndDate:'',banReason:''};setPlayers(prev=>[p,...prev]);setPlayer(p);setPage('player')}
+ async function loginAdmin(){
+  if(!auth.discordId || !auth.password) return alert('Discord ID ve şifre gerekli.');
+  const { data, error } = await supabase.from('admins').select('*').eq('discord_id',auth.discordId).eq('password',auth.password).single();
+  if(error || !data) return alert('Admin bilgileri yanlış.');
+  const a=dbAdminToApp(data);
+  setAdmin(a);
+  setPage('admin');
+  await addDbLog('ADMIN_LOGIN', `${a.username} giriş yaptı.`, a.username);
+}
  function loginPlayer(){const p=players.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!p)return alert('Kullanıcı adı veya şifre yanlış.');setPlayer(p);setPage('player')}
 
  if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
