@@ -74,26 +74,7 @@ const starterAdmins = [
   { username:'Arda', password:'Arda1234', discordId:'1144954440667910155', role:'Web Developer', level:19 }
 ];
 
-const donateDefault = [
-  { type:'Donate Ped', items:['Özel Ped Paketi','Karakter Ped','VIP Ped','Limitli Ped'], images:['','','',''] },
-  { type:'Donate Boy', items:['Boy Paketi','Karakter Boy Ayarı','Özel Vücut Ayarı','VIP Görünüm'], images:['','','',''] },
-  { type:'Donate Mekanlar', items:['İşletme Mekanı','Özel Mekan','VIP Mekan','Aile Mekanı'], images:['','','',''] },
-  { type:'Donate Meslekler', items:['Özel Meslek','VIP Meslek','Meslek Paketi','İşletme Yetkisi'], images:['','','',''] },
-  { type:'Donate Malikaneler', items:['Boğaz Malikane','Lüks Villa','Garajlı Malikane','Özel Ev'], images:['','','',''] },
-  { type:'Donate Araçlar', items:['Standart Donate Araç','Spor Araç','SUV Araç','Özel Araç'], images:['','','',''] },
-  { type:'Donate VIP Araçlar', items:['VIP Araç 1','VIP Araç 2','VIP Araç 3','VIP Araç 4'], images:['','','',''] },
-  { type:'Donate İmzalı Boşta', items:['İmzalı Boş Araç','Özel Plaka Hazır','Limitli Araç','Özel Seri'], images:['','','',''] },
-  { type:'Donate İmzalanan Araçlar', items:['İmzalanmış Araç','Sahipli Araç','Özel Seri Araç','Limitli İmzalı'], images:['','','',''] },
-  { type:'Donate Araç Eklenti', items:['Araç Eklenti Paketi','Body Kit','Özel Jant','Araç Modifiye'], images:['','','',''] },
-  { type:'Donate Plaka', items:['Özel Plaka','İsimli Plaka','VIP Plaka','Limitli Plaka'], images:['','','',''] },
-  { type:'Donate Motor', items:['Yamaha R1','Ducati Panigale','BMW S1000RR','Harley Custom'], images:['','','',''] },
-  { type:'Donate Tekne Yatlar', items:['Tekne','Yat','Lüks Yat','Özel Deniz Aracı'], images:['','','',''] },
-  { type:'Donate Helikopter', items:['Helikopter','VIP Helikopter','Özel Hava Aracı','Limitli Helikopter'], images:['','','',''] },
-  { type:'Donate Silah', items:['Silah Paketi','Özel Silah','VIP Silah','Limitli Silah'], images:['','','',''] },
-  { type:'Donate Zırh', items:['Zırh Paketi','VIP Zırh','Özel Zırh','Koruma Paketi'], images:['','','',''] },
-  { type:'Donate Numara', items:['Özel Numara','VIP Numara','Kısa Numara','Limitli Numara'], images:['','','',''] },
-  { type:'Donate Özel Paket', items:['Diamond VIP','Founder Destek','Aile Paketi','Full Paket'], images:['','','',''] }
-];
+const donateDefault = [];
 
 function normalizeDonateCategory(d){
  const items=Array.isArray(d.items)?d.items:[];
@@ -356,28 +337,31 @@ function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <
 
 function MarketPage({setPage,openLogin,donate}) {
  const [selected,setSelected]=useState(null);
- const market=(donate&&donate.length?donate:donateDefault).map(normalizeDonateCategory);
+ const market=(Array.isArray(donate)?donate:[]).map(normalizeDonateCategory);
 
  return <div className="inner donateLuxuryPage"><Header setPage={setPage} openLogin={openLogin}/><main>
   <section className="donateLuxuryHero">
    <div>
     <span>YER6 DONATE MARKET</span>
-    <h1>Lüks Donate Koleksiyonu</h1>
-    <p>Kategorilere tıkla, admin panelden eklenen fotoğrafları görüntüle. Fiyat bilgisi sitede yazmaz.</p>
+    <h1>Donate Market</h1>
+    <p>Bu alanda sadece admin panelden eklenen kategoriler ve fotoğraflar görünür.</p>
    </div>
    <Card className="donateLuxuryInfo">
     <Crown size={40}/>
-    <h2>Fotoğraf Galerisi</h2>
-    <p>Ürün panellerinde sadece admin panelden eklenen fotoğraflar görünür.</p>
+    <h2>Admin Kontrollü</h2>
+    <p>Kategori ve fotoğrafları admin panelden ekleyip silebilirsin.</p>
    </Card>
   </section>
 
-  <section className="donateLuxuryGrid">
+  {market.length===0 ? <Card className="panel emptyDonateMarket">
+   <h2>Donate kategorisi yok</h2>
+   <p>Admin Panel {'>'} Donate Market bölümünden kategori ekleyince burada görünecek.</p>
+  </Card> : <section className="donateLuxuryGrid">
    {market.map((d,i)=>{
     const cover=d.cover || d.photos?.[0]?.url;
     return <Card className="donateLuxuryCard" key={(d.id||d.type)+i}>
      <div className="donateLuxuryImg">
-      {cover ? <img src={cover} alt={d.type}/> : <ShoppingCart size={38}/>}
+      {cover ? <img src={cover} alt={d.type}/> : <ShoppingCart size={38}/>} 
      </div>
      <div className="donateLuxuryBody">
       <small>DONATE KATEGORİ</small>
@@ -387,7 +371,7 @@ function MarketPage({setPage,openLogin,donate}) {
      </div>
     </Card>
    })}
-  </section>
+  </section>}
 
   {selected && <div className="donatePhotoOverlay">
    <Card className="donatePhotoModal">
@@ -395,7 +379,7 @@ function MarketPage({setPage,openLogin,donate}) {
      <div>
       <span>DONATE FOTOĞRAFLARI</span>
       <h2>{selected.type}</h2>
-      <p>Bu alanda sadece admin panelden eklenen fotoğraflar görünür.</p>
+      <p>Sadece admin panelden eklenen fotoğraflar görünür.</p>
      </div>
      <button className="donateClose" onClick={()=>setSelected(null)}>×</button>
     </div>
@@ -552,7 +536,43 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  setPunish({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
 }
  function finishPunishment(id){const p=punishments.find(x=>x.id===id);setPunishments(all=>all.map(x=>x.id===id?{...x,status:'Bitti'}:x));if(p?.targetType==='Oyuncu')setPlayers(all=>all.map(x=>String(x.discordId)===String(p.targetId)?{...x,wlStatus:'Aktif',wlEndDate:'',banReason:''}:x));sendDiscordLog('Ceza Bitti / WL Geri Verildi',`${p?.targetId} için ceza bitirildi.`)}
- async function saveDonate(){const payload={items:editDonate.items,images:(editDonate.images||[]).slice(0,4)};if(editDonate.id)await supabase.from('donate_categories').update(payload).eq('id',editDonate.id);setDonate(p=>p.map(d=>d.type===editDonate.type?{...editDonate,...payload}:d));setEditDonate(null);await addDbLog('DONATE_UPDATE', `${editDonate.type} güncellendi.`, admin.username);}
+ async function saveDonate(){
+ if(!editDonate?.type?.trim()) return alert('Kategori ismi gerekli.');
+ const clean=normalizeDonateCategory(editDonate);
+ const photos=(clean.photos||[])
+  .filter(p=>String(p.url||'').trim())
+  .map(p=>({title:p.title||'',url:p.url||''}));
+ const payload={
+  type:clean.type,
+  desc:clean.desc||'',
+  cover:clean.cover||photos[0]?.url||'',
+  photos,
+  items:photos.map(p=>p.title||'Donate Fotoğraf'),
+  images:photos.slice(0,4).map(p=>p.url)
+ };
+ let saved;
+ if(clean.id){
+  const {data,error}=await supabase.from('donate_categories').update(payload).eq('id',clean.id).select().single();
+  if(error) return alert('Donate kayıt hatası: '+error.message);
+  saved=normalizeDonateCategory(data||{...clean,...payload});
+ }else{
+  const {data,error}=await supabase.from('donate_categories').insert(payload).select().single();
+  if(error) return alert('Donate kayıt hatası: '+error.message);
+  saved=normalizeDonateCategory(data||payload);
+ }
+ setDonate(prev=>{
+  const arr=Array.isArray(prev)?prev:[];
+  const next=saved.id && arr.some(d=>String(d.id)===String(saved.id))
+   ? arr.map(d=>String(d.id)===String(saved.id)?saved:d)
+   : arr.some(d=>String(d.type)===String(saved.type))
+    ? arr.map(d=>String(d.type)===String(saved.type)?saved:d)
+    : [saved,...arr];
+  localStorage.setItem('yer6_donate_v12',JSON.stringify(next));
+  return next;
+ });
+ setEditDonate(null);
+ await addDbLog('DONATE_SAVE', `${saved.type} kaydedildi.`, admin.username);
+}
 
  async function removeAdminOnlyFounder(discordId){
   if(!canFounderManage(admin)) return alert('Bu işlem sadece Founder yetkisine özeldir.');
@@ -621,30 +641,35 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
   {active==='Donate Market'&&<div className="panelStack">
   <Card className="panel">
-   <h2>Donate Market Fotoğraf Yönetimi</h2>
-   <p className="muted">Kategori oluştur, düzenle, sil. Ürünleri görüntüle panelinde sadece buraya eklediğin fotoğraflar görünür.</p>
-   <Button onClick={()=>setEditDonate({type:'Yeni Donate Kategorisi',desc:'Bu kategorideki özel donate ürünleri.',cover:'',items:[],images:[],photos:[]})}>Yeni Kategori Oluştur</Button>
+   <h2>Donate Market Yönetimi</h2>
+   <p className="muted">Buradan kategori ekle, düzenle ve sil. Sitede sadece burada eklediğin kategoriler görünür.</p>
+   <Button onClick={()=>setEditDonate({type:'Yeni Kategori',desc:'Bu kategorideki özel donate ürünleri.',cover:'',items:[],images:[],photos:[]})}>Kategori Ekle</Button>
   </Card>
 
   <div className="donateAdminGrid">
+   {donate.length===0&&<Card className="panel"><h2>Kategori yok</h2><p>Yeni kategori ekle.</p></Card>}
    {donate.map((d,idx)=>{
     const cat=normalizeDonateCategory(d);
     return <Card className="donateAdminCard" key={(cat.id||cat.type)+idx}>
      <div className="donateAdminCover">{cat.cover?<img src={cat.cover} alt={cat.type}/>:<ShoppingCart size={34}/>}</div>
      <div className="donateAdminBody">
-      <small>DONATE KATEGORİ</small>
+      <small>KATEGORİ</small>
       <h2>{cat.type}</h2>
       <p>{cat.desc}</p>
       <b>{(cat.photos||[]).length} fotoğraf</b>
       <div className="actions">
        <Button onClick={()=>setEditDonate(cat)}>Düzenle</Button>
        <Button variant="ghost" onClick={async()=>{
-        if(!confirm(cat.type+' kategorisi silinsin mi?')) return;
+        if(!confirm(cat.type+' silinsin mi?')) return;
         if(cat.id){
-          const { error } = await supabase.from('donate_categories').delete().eq('id',cat.id);
-          if(error) return alert('Silme hatası: '+error.message);
+         const { error } = await supabase.from('donate_categories').delete().eq('id',cat.id);
+         if(error) return alert('Silme hatası: '+error.message);
         }
-        setDonate(prev=>prev.filter((x,i)=> i!==idx && String(x.id||x.type)!==String(cat.id||cat.type)));
+        setDonate(prev=>{
+         const next=(Array.isArray(prev)?prev:[]).filter((x,i)=>i!==idx && String(x.id||x.type)!==String(cat.id||cat.type));
+         localStorage.setItem('yer6_donate_v12',JSON.stringify(next));
+         return next;
+        });
         await addDbLog('DONATE_DELETE', `${cat.type} silindi.`, admin.username);
        }}>Sil</Button>
       </div>
@@ -655,7 +680,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  </div>}
 
  {editDonate&&<div className="modal"><Card className="modalCard donateEditorModal">
-  <h2>Donate Fotoğraf Editörü</h2>
+  <h2>Donate Kategori Düzenle</h2>
 
   <label>Kategori İsmi</label>
   <Field value={editDonate.type||''} onChange={v=>setEditDonate({...editDonate,type:v})} placeholder="Örn: Donate Araçlar"/>
@@ -663,7 +688,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   <label>Kategori Açıklaması</label>
   <TextArea value={editDonate.desc||''} onChange={v=>setEditDonate({...editDonate,desc:v})} placeholder="Kategori açıklaması"/>
 
-  <label>Kategori Kapak Fotoğraf Linki</label>
+  <label>Kapak Fotoğraf Linki</label>
   <Field value={editDonate.cover||''} onChange={v=>setEditDonate({...editDonate,cover:v})} placeholder="https://...jpg veya /images/arac.png"/>
 
   <div className="donateEditorHead">
@@ -674,7 +699,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   <div className="donateProductEditorList">
    {(editDonate.photos||[]).map((p,i)=><Card className="donateProductEditor" key={i}>
     <div className="donateProductEditorPreview">
-     {p.url?<img src={p.url} alt={p.title}/>:<Star size={26}/>}
+     {p.url?<img src={p.url} alt={p.title}/>:<Star size={26}/>} 
     </div>
     <div>
      <label>Fotoğraf Başlığı</label>
@@ -703,21 +728,17 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   </div>
  </Card></div>}
 
-    {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
-  {editDonate&&<div className="modal"><Card className="modalCard"><h2>{editDonate.type} Düzenle</h2><TextArea value={editDonate.items.join(', ')} onChange={v=>setEditDonate({...editDonate,items:v.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Ürünler"/>
-  <h3>Donate Fotoğrafları</h3>
-  <p className="muted">Her kategori için en fazla 4 fotoğraf linki ekleyebilirsin. Örnek: /images/araba1.png veya https://...</p>
-  {[0,1,2,3].map(i=><Field key={i} value={(editDonate.images||['','','',''])[i]||''} onChange={v=>{const imgs=[...(editDonate.images||['','','',''])];imgs[i]=v;setEditDonate({...editDonate,images:imgs})}} placeholder={`Fotoğraf ${i+1} linki`}/>)}
-  <div className="actions"><Button onClick={saveDonate}>Kaydet</Button><Button variant="ghost" onClick={()=>setEditDonate(null)}>Kapat</Button></div></Card></div>}
+ {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
  </main></div>
 }
+
 
 function App(){
  const [page,setPage]=useState('home');
  const [loginMode,setLoginMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
  const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v19')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
- const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||donateDefault);
+ const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||[]);
  const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v19')||'null')||staffRanksDefault);
  const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v19')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
@@ -748,26 +769,10 @@ function App(){
     if(!ticketsRes.error) setTickets((ticketsRes.data||[]).map(dbTicketToApp));
     if(!appsRes.error) setApps((appsRes.data||[]).map(dbAppToApp));
     if(!punishRes.error) setPunishments((punishRes.data||[]).map(dbPunishmentToApp));
-    if(!donateRes.error && donateRes.data?.length) setDonate(donateRes.data.map(dbDonateToApp));
+    if(!donateRes.error) setDonate((donateRes.data||[]).map(dbDonateToApp));
     if(!logsRes.error) setLogs((logsRes.data||[]).map(l=>`${l.created_at ? new Date(l.created_at).toLocaleString('tr-TR') : ''} - ${l.actor||'SYSTEM'} - ${l.action}: ${l.detail||''}`));
   }catch(e){ console.log('Supabase veri çekme hatası', e); }
  }
-
-
- useEffect(()=>{
-  localStorage.setItem('YER6_DONATE_FULL_CATEGORIES_V12','1');
-  setDonate(prev=>{
-    const old = Array.isArray(prev) ? prev : [];
-    return donateDefault.map(def=>{
-      const found = old.find(x=>x.type===def.type);
-      return {
-        ...def,
-        items: found?.items?.length ? found.items : def.items,
-        images: (found?.images || def.images || ['','','','']).slice(0,4)
-      };
-    });
-  });
- },[]);
 
 
 
