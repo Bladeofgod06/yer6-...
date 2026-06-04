@@ -225,6 +225,16 @@ function sortStaffByRank(list) {
 }
 
 
+function normalizeStaffRanks(list=[]) {
+  const map = new Map();
+  [...staffRanksDefault, ...(Array.isArray(list) ? list : [])].forEach(r => {
+    if(!r || !r.rank) return;
+    map.set(r.rank, { level: getStaffLevel(r.rank) || Number(r.level || 0), rank: r.rank });
+  });
+  return Array.from(map.values()).sort((a,b)=>Number(a.level)-Number(b.level));
+}
+
+
 
 function canFounderManage(admin) {
   return String(admin?.role || '').trim().toLowerCase() === 'founder';
@@ -1289,7 +1299,7 @@ function App(){
  const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v19')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
  const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||[]);
- const [staffRanks,setStaffRanks]=useState(()=>JSON.parse(localStorage.getItem('yer6_ranks_v19')||'null')||staffRanksDefault);
+ const [staffRanks,setStaffRanks]=useState(()=>normalizeStaffRanks(JSON.parse(localStorage.getItem('yer6_ranks_v19')||'null')||staffRanksDefault));
  const [staffMembers,setStaffMembers]=useState(()=>JSON.parse(localStorage.getItem('yer6_staff_members_v19')||'null')||staffMembersDefault);
  const [tickets,setTickets]=useState(()=>JSON.parse(localStorage.getItem('yer6_tickets_v10')||'null')||[]);
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
@@ -1346,7 +1356,8 @@ function App(){
     ]);
     if(!adminsRes.error && adminsRes.data?.length) setAdmins(adminsRes.data.map(dbAdminToApp));
     if(!playersRes.error) setPlayers((playersRes.data||[]).map(dbPlayerToApp));
-    if(!ranksRes.error && ranksRes.data?.length) setStaffRanks(ranksRes.data.map(r=>({level:r.level,rank:r.rank})));
+    if(!ranksRes.error && ranksRes.data?.length) setStaffRanks(normalizeStaffRanks(ranksRes.data.map(r=>({level:r.level,rank:r.rank}))));
+    else setStaffRanks(normalizeStaffRanks(staffRanksDefault));
     if(!staffRes.error && staffRes.data?.length) setStaffMembers(staffRes.data.map(dbStaffToApp));
     if(!ticketsRes.error) setTickets((ticketsRes.data||[]).map(dbTicketToApp));
     if(!appsRes.error) setApps((appsRes.data||[]).map(dbAppToApp));
@@ -1369,7 +1380,7 @@ function App(){
 
  useEffect(()=>{
   localStorage.setItem('YER6_STAFF_PHOTO_RANKS_V19','1');
-  setStaffRanks(staffRanksDefault);
+  setStaffRanks(normalizeStaffRanks(staffRanksDefault));
   setStaffMembers(prev=>{
     const fixed = (prev && prev.length ? prev : staffMembersDefault).map(x=>({
       ...x,
