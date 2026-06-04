@@ -337,7 +337,7 @@ function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <
 
 function MarketPage({setPage,openLogin,donate}) {
  const [selected,setSelected]=useState(null);
- const [photoViewer,setPhotoViewer]=useState(null);
+ const [sliderIndex,setSliderIndex]=useState(0);
  const market=(Array.isArray(donate)?donate:[]).map(normalizeDonateCategory);
 
  return <div className="inner donateLuxuryPage"><Header setPage={setPage} openLogin={openLogin}/><main>
@@ -368,7 +368,7 @@ function MarketPage({setPage,openLogin,donate}) {
       <small>DONATE KATEGORİ</small>
       <h2>{d.type}</h2>
       <p>{d.desc}</p>
-      <Button onClick={()=>setSelected(d)}>Ürünleri Görüntüle</Button>
+      <Button onClick={()=>{setSelected(d);setSliderIndex(0)}}>Ürünleri Görüntüle</Button>
      </div>
     </Card>
    })}
@@ -385,34 +385,38 @@ function MarketPage({setPage,openLogin,donate}) {
      <button className="donateClose" onClick={()=>setSelected(null)}>×</button>
     </div>
 
-    <div className="donatePhotoGrid compactGallery">
-     {(selected.photos||[]).map((p,i)=><button type="button" className="donateOnlyPhoto photoThumbCard" key={(p.url||'foto')+i} onClick={()=>setPhotoViewer({photo:p,index:i,total:(selected.photos||[]).length,category:selected.type})}>
-      <img src={p.url} alt={p.title||selected.type}/>
-      <span>{p.title||('Fotoğraf '+(i+1))}</span>
-      <em>Görüntüle</em>
-     </button>)}
-     {(!selected.photos||selected.photos.length===0)&&<Card className="donateNoPhoto">
+    {(selected.photos||[]).length>0 ? <div className="donateSliderWrap">
+     {(()=>{
+      const list=selected.photos||[];
+      const current=list[sliderIndex%list.length]||list[0];
+      const next=()=>setSliderIndex((sliderIndex+1)%list.length);
+      const prev=()=>setSliderIndex(sliderIndex===0?list.length-1:sliderIndex-1);
+      return <div className="donateSliderPanel">
+       <div className="donateSliderImageBox">
+        <img src={current.url} alt={current.title||selected.type}/>
+        {list.length>1&&<>
+         <button type="button" className="donateSlideArrow left" onClick={prev}>‹</button>
+         <button type="button" className="donateSlideArrow right" onClick={next}>›</button>
+        </>}
+        <div className="donateSlideCounter">{sliderIndex+1} / {list.length}</div>
+       </div>
+       <div className="donateSliderInfo">
+        <small>{selected.type}</small>
+        <h3>{current.title||('Fotoğraf '+(sliderIndex+1))}</h3>
+        <p>Fotoğrafları sağ ve sol oklarla gezebilirsin.</p>
+       </div>
+       <div className="donateSliderThumbs">
+        {list.map((p,i)=><button type="button" className={i===sliderIndex?'active':''} key={(p.url||'foto')+i} onClick={()=>setSliderIndex(i)}>
+         <img src={p.url} alt={p.title||selected.type}/>
+        </button>)}
+       </div>
+      </div>
+     })()}
+    </div> : <Card className="donateNoPhoto">
       <ShoppingCart size={38}/>
       <h3>Fotoğraf eklenmedi</h3>
       <p>Admin panelden bu kategoriye fotoğraf ekleyince burada görünecek.</p>
      </Card>}
-    </div>
-   </Card>
-  </div>}
-
-  {photoViewer&&<div className="singlePhotoOverlay">
-   <Card className="singlePhotoPanel">
-    <div className="singlePhotoHead">
-     <div>
-      <span>{photoViewer.category}</span>
-      <h2>{photoViewer.photo.title||('Fotoğraf '+(photoViewer.index+1))}</h2>
-      <p>{photoViewer.index+1} / {photoViewer.total}</p>
-     </div>
-     <button className="donateClose" onClick={()=>setPhotoViewer(null)}>×</button>
-    </div>
-    <div className="singlePhotoFrame">
-     <img src={photoViewer.photo.url} alt={photoViewer.photo.title||photoViewer.category}/>
-    </div>
    </Card>
   </div>}
  </main></div>

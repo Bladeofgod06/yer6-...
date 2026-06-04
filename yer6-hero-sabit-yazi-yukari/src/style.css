@@ -603,3 +603,196 @@
 .donateProductEditorPreview img{width:100%;height:100%;object-fit:cover;display:block}
 .commandPreview code{margin-bottom:8px}
 @media(max-width:1000px){.donateAdminGrid{grid-template-columns:1fr}.donateProductEditor{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   DONATE MARKET PREMIUM SLIDER - OKLU FOTO GALERI
+   ========================================================= */
+
+.donatePhotoOverlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:9999!important;
+  background:rgba(0,0,0,.82)!important;
+  backdrop-filter:blur(10px)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:24px!important;
+  overflow:auto!important;
+}
+
+.donatePhotoModal{
+  width:min(980px,94vw)!important;
+  max-height:88vh!important;
+  overflow:auto!important;
+  border-radius:24px!important;
+  padding:24px!important;
+  margin:auto!important;
+}
+
+.donateSliderWrap{
+  width:100%!important;
+}
+
+.donateSliderPanel{
+  border:1px solid rgba(255,31,49,.28)!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,#090b10,#050608)!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.35)!important;
+}
+
+.donateSliderImageBox{
+  position:relative!important;
+  height:420px!important;
+  max-height:56vh!important;
+  width:100%!important;
+  background:#020304!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+
+.donateSliderImageBox img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  display:block!important;
+  transition:transform .25s ease!important;
+}
+
+.donateSliderPanel:hover .donateSliderImageBox img{
+  transform:scale(1.025)!important;
+}
+
+.donateSliderImageBox:after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  background:linear-gradient(90deg,rgba(0,0,0,.36),transparent 24%,transparent 76%,rgba(0,0,0,.36))!important;
+  pointer-events:none!important;
+}
+
+.donateSlideArrow{
+  position:absolute!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  z-index:3!important;
+  width:52px!important;
+  height:52px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  background:rgba(239,16,36,.94)!important;
+  color:#fff!important;
+  font-size:42px!important;
+  line-height:42px!important;
+  cursor:pointer!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-weight:900!important;
+  transition:.2s ease!important;
+  padding:0!important;
+}
+
+.donateSlideArrow:hover{
+  background:#ff1f31!important;
+  transform:translateY(-50%) scale(1.08)!important;
+}
+
+.donateSlideArrow.left{left:18px!important}
+.donateSlideArrow.right{right:18px!important}
+
+.donateSlideCounter{
+  position:absolute!important;
+  left:50%!important;
+  bottom:18px!important;
+  transform:translateX(-50%)!important;
+  z-index:3!important;
+  background:rgba(0,0,0,.72)!important;
+  color:#fff!important;
+  padding:8px 16px!important;
+  border-radius:999px!important;
+  font-weight:1000!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+}
+
+.donateSliderInfo{
+  padding:22px 24px 14px!important;
+}
+
+.donateSliderInfo small{
+  color:#ff1f31!important;
+  font-weight:1000!important;
+  letter-spacing:2px!important;
+  font-size:12px!important;
+}
+
+.donateSliderInfo h3{
+  margin:8px 0 8px!important;
+  font-size:30px!important;
+}
+
+.donateSliderInfo p{
+  margin:0!important;
+  color:#aaa!important;
+}
+
+.donateSliderThumbs{
+  display:flex!important;
+  gap:10px!important;
+  padding:14px 24px 24px!important;
+  overflow-x:auto!important;
+}
+
+.donateSliderThumbs button{
+  width:90px!important;
+  height:64px!important;
+  flex:0 0 auto!important;
+  padding:0!important;
+  border-radius:12px!important;
+  overflow:hidden!important;
+  border:2px solid rgba(255,255,255,.12)!important;
+  background:#111!important;
+  cursor:pointer!important;
+  opacity:.62!important;
+  transition:.2s ease!important;
+}
+
+.donateSliderThumbs button.active,
+.donateSliderThumbs button:hover{
+  opacity:1!important;
+  border-color:#ff1f31!important;
+  transform:translateY(-2px)!important;
+}
+
+.donateSliderThumbs img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+
+@media(max-width:760px){
+  .donateSliderImageBox{
+    height:300px!important;
+    max-height:48vh!important;
+  }
+  .donateSlideArrow{
+    width:44px!important;
+    height:44px!important;
+    font-size:34px!important;
+  }
+  .donateSliderInfo h3{
+    font-size:24px!important;
+  }
+  .donateSliderThumbs button{
+    width:74px!important;
+    height:52px!important;
+  }
+}
