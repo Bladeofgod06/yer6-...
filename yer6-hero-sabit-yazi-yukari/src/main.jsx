@@ -125,6 +125,7 @@ const staffMembersDefault = [
   { name:'Co-Founder', discordId:'cofounder', rank:'Co-Founder', duty:'Kurucu Yardımcısı', status:'Aktif', image:'' },
   { name:'Head Of Management', discordId:'headofmanagement', rank:'Head Of Management', duty:'Üst Yönetim Sorumlusu', status:'Aktif', image:'' },
   { name:'Head Master', discordId:'headmaster', rank:'Head Master', duty:'Üst Yönetim Lideri', status:'Aktif', image:'' },
+  { name:'Management', discordId:'management', rank:'Management', duty:'Management Yetkili', status:'Aktif', image:'' },
   { name:'Head Manager', discordId:'headmanager', rank:'Head Manager', duty:'Yönetim Sorumlusu', status:'Aktif', image:'' },
   { name:'Senior Manager', discordId:'seniormanager', rank:'Senior Manager', duty:'Kıdemli Yönetici', status:'Aktif', image:'' },
   { name:'Head Admin', discordId:'headadmin', rank:'Head Admin', duty:'Admin Ekibi Sorumlusu', status:'Aktif', image:'' },
@@ -137,11 +138,11 @@ const staffMembersDefault = [
 const photos = ["yer6-main-hero.png","hero.jpg","yer6-photo-1.jpg","yer6-photo-2.jpg","yer6-photo-3.jpg","yer6-photo-4.jpg","yer6-photo-5.jpg","yer6-photo-6.jpg","yer6-photo-7.jpg","yer6-photo-8.jpg"];
 
 const starterAdmins = [
-  { username:'Founder 1', password:'123456', discordId:'founder1', role:'Founder', level:22 },
-  { username:'Founder 2', password:'123456', discordId:'founder2', role:'Founder', level:22 },
-  { username:'Co-Founder', password:'123456', discordId:'cofounder', role:'Co-Founder', level:21 },
-  { username:'Head Master', password:'123456', discordId:'headmaster', role:'Head Master', level:18 },
-  { username:'Arda', password:'Arda1234', discordId:'1144954440667910155', role:'Web Developer', level:19 }
+  { username:'Founder 1', password:'123456', discordId:'founder1', role:'Founder', level:23 },
+  { username:'Founder 2', password:'123456', discordId:'founder2', role:'Founder', level:23 },
+  { username:'Co-Founder', password:'123456', discordId:'cofounder', role:'Co-Founder', level:22 },
+  { username:'Head Master', password:'123456', discordId:'headmaster', role:'Head Master', level:19 },
+  { username:'Arda', password:'Arda1234', discordId:'1144954440667910155', role:'Web Developer', level:20 }
 ];
 
 const donateDefault = [];
@@ -195,7 +196,7 @@ const staffRankOrder = {
   "Head Of Management": 21,
   "Web Developer": 20,
   "Head Master": 19,
-  "Management": 18
+  "Management": 18,
   "Head Manager": 17,
   "Senior Manager": 16,
   "Head Admin": 15,
