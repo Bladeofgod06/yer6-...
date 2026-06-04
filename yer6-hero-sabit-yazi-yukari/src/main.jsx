@@ -196,6 +196,12 @@ function wlRemoveCommand(p) {
 function roleGiveCommand(p) {
   return wlFinishGiveWlCommand(p);
 }
+function punishmentStartCommands(p) {
+  return `${wlGiveCommand(p)}\n${wlBanCommand(p)}`;
+}
+function punishmentFinishCommands(p) {
+  return `${wlFinishRemoveBanCommand(p)}\n${wlFinishGiveWlCommand(p)}`;
+}
 function makeEndDate(penalty) {
   const d = penaltyDays(penalty);
   if(d === null) return 'PERMA';
@@ -648,18 +654,31 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   {active==='Başvurular'&&<Card className="panel"><h2>Yetkili Başvuruları</h2>{apps.length===0&&<p>Başvuru yok.</p>}{apps.map((a,i)=><div className="row" key={a.discordId+i}><div><b>{a.name||a.username}</b><p>{a.discordId} • {a.status}</p><small>{a.reason}</small></div><div className="actions"><Button onClick={()=>appResult(i,'Kabul Edildi')}>Kabul</Button><Button variant="ghost" onClick={()=>appResult(i,'Reddedildi')}>Reddet</Button></div></div>)}</Card>}
   {active==='Ceza Ver'&&<Card className="panel"><h2>Oyuncu / Yetkili Ceza Ver ve WL Al</h2><div className="grid3"><select className="field" value={punish.targetType} onChange={e=>setPunish({...punish,targetType:e.target.value})}><option>Oyuncu</option><option>Yetkili</option></select><Field value={punish.targetId} onChange={v=>setPunish({...punish,targetId:v})} placeholder="Discord ID"/><Field value={punish.targetName} onChange={v=>setPunish({...punish,targetName:v})} placeholder="İsim"/></div><div className="grid3"><select className="field" value={punish.rule} onChange={e=>{const r=rules.find(x=>x.name===e.target.value);setPunish({...punish,rule:e.target.value,penalty:r?.penalty||''})}}><option value="">Kural seç</option>{rules.map(r=><option key={r.id} value={r.name}>{r.name} - {r.penalty}</option>)}</select><Field value={punish.penalty} onChange={v=>setPunish({...punish,penalty:v})} placeholder="Ceza / WL süresi"/><Field value={punish.proof} onChange={v=>setPunish({...punish,proof:v})} placeholder="Kanıt linki"/></div><TextArea value={punish.note} onChange={v=>setPunish({...punish,note:v})} placeholder="Ceza notu"/><div className="commandPreview">
   <b>Hazır Discord Komutu</b>
-  <code>{punish.targetId && punish.rule ? `/wl-ceza ver kullanıcı:${punish.targetId} süre:${durationForCommand(punish.penalty)} sebep:${punish.rule}` : 'Discord ID ve kural seçince komut burada oluşur.'}</code>
+  <code>{punish.targetId && punish.rule ? `/rol-al kisiler: kullanıcı:${punish.targetId} süre:${durationForCommand(punish.penalty)} sebep:${punish.rule}` : 'Discord ID ve kural seçince komut burada oluşur.'}</code>
 </div>
 <div className="actions">
-  <Button onClick={addPunishment}>Ceza Kaydet + Discord'a Bildir</Button>
-  <Button variant="ghost" onClick={()=>copyText(`/wl-ceza ver kullanıcı:${punish.targetId} süre:${durationForCommand(punish.penalty)} sebep:${punish.rule}`)}>Komutu Kopyala</Button>
+  <div className="commandPreview commandPreviewDouble">
+  <div>
+    <b>Ceza Başlat Komutları</b>
+    <code>{punish.targetId ? wlGiveCommand(punish) : 'Discord ID girince 1. komut oluşur.'}</code>
+    <code>{punish.targetId ? wlBanCommand(punish) : 'Discord ID girince 2. komut oluşur.'}</code>
+    <Button variant="ghost" onClick={()=>copyText(punishmentStartCommands(punish))}>Başlat Komutlarını Kopyala</Button>
+  </div>
+  <div>
+    <b>Ceza Bitince Kullanılacak Komutlar</b>
+    <code>{punish.targetId ? wlFinishRemoveBanCommand(punish) : 'Discord ID girince 1. komut oluşur.'}</code>
+    <code>{punish.targetId ? wlFinishGiveWlCommand(punish) : 'Discord ID girince 2. komut oluşur.'}</code>
+    <Button variant="ghost" onClick={()=>copyText(punishmentFinishCommands(punish))}>Bitiş Komutlarını Kopyala</Button>
+  </div>
+</div><Button onClick={addPunishment}>Ceza Kaydet</Button>
+  <Button variant="ghost" onClick={()=>copyText(`/rol-al kisiler: kullanıcı:${punish.targetId} süre:${durationForCommand(punish.penalty)} sebep:${punish.rule}`)}>Komutları Kopyala</Button>
 </div></Card>}
   {active==='WL Takip'&&<Card className="panel"><h2>WL / Ceza Takip</h2>{activePunishments.length===0&&<p>Aktif ceza yok.</p>}{activePunishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty}</p><small>WL Bitiş: {p.endDate==='PERMA'?'PERMA':p.endDate?new Date(p.endDate).toLocaleString('tr-TR'):'Yok'} • {daysLeft(p.endDate)}</small></div><div className="actions">
-  <Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>WL Kaldır Komutunu Kopyala</Button>
-  <Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>WL Ver Komutunu Kopyala</Button>
+  <Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>Ceza Bitince Komutları Kopyala</Button>
+  <Button variant="ghost" onClick={()=>copyText(punishmentStartCommands(p))}>Ceza Başlat Komutları</Button>
   <Button onClick={()=>finishPunishment(p.id)}><CheckCircle size={16}/> WL Geri Ver / Bitir</Button>
 </div></div>)}</Card>}
-  {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>Ver Komutu</Button><Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>Kaldır Komutu</Button></div></div>)}</Card>}
+  {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(punishmentStartCommands(p))}>Ceza Başlat</Button><Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>Ceza Bitir</Button></div></div>)}</Card>}
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
   {active==='Donate Market'&&<div className="panelStack">
   <Card className="panel">
