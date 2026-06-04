@@ -16,590 +16,489 @@
 .panel p{color:#aaa}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 
-/* FINAL v10 Oyuncu panel + WL takip */
-.playerLayout .title{text-align:left}
-.playerLayout main{padding-top:30px}
-.stat b{word-break:break-word;font-size:24px}
-.panel h2{margin-top:0}
-.panelStack{display:grid;gap:18px}
-.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
-.badge.bad{background:#3a0509;color:#ff9aa8}
-.badge.good{background:#052d1a;color:#8bffc2}
-.badge.note{background:#111a2a;color:#b9d5ff}
-@media(max-width:1000px){.playerLayout .title{text-align:center}}
 
-.commandPreview{
-  margin:16px 0;
-  padding:14px;
-  border:1px solid rgba(240,20,39,.25);
-  border-radius:12px;
-  background:rgba(0,0,0,.35);
-}
-.commandPreview b{display:block;margin-bottom:8px;color:#ff1f31}
-.commandPreview code,.miniCommand{
-  display:block;
-  background:#07090d;
-  border:1px solid rgba(255,255,255,.08);
-  padding:12px;
-  border-radius:10px;
-  color:#ddd;
-  word-break:break-all;
-  margin-top:10px;
-}
-
-
-/* =========================================================
-   YER6 FINAL: GORSEL + LOGO + AI FIX
-   public/images klasörü ZIP içinde gelir. Silme.
-   ========================================================= */
-
-.logo.logoImageBtn{
-  font-size:0!important;
-  letter-spacing:0!important;
-  color:transparent!important;
-  width:190px!important;
-  height:74px!important;
-  padding:0!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  background:transparent!important;
-  border:0!important;
-  overflow:visible!important;
-}
-
-.logo.logoImageBtn img{
-  width:176px!important;
-  max-height:70px!important;
-  object-fit:contain!important;
-  display:block!important;
-  filter:drop-shadow(0 0 12px rgba(255,0,0,.34))!important;
-}
-
-.logoFallback{display:none!important}
-
-.heroBigLogo{
-  width:340px!important;
-  max-width:90%!important;
-  height:auto!important;
-  display:block!important;
-  object-fit:contain!important;
-  margin:0 0 22px 0!important;
-  filter:drop-shadow(0 0 18px rgba(255,0,0,.42)) drop-shadow(0 0 42px rgba(255,0,0,.18))!important;
-}
-
-.heroText>span{display:none!important}
-
-.header{
-  background:rgba(0,0,0,.94)!important;
-  border-bottom:1px solid rgba(255,0,0,.38)!important;
-}
-
-.heroDark{
-  background:linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.30),rgba(0,0,0,.86)),linear-gradient(180deg,rgba(0,0,0,.05),#05070a 96%)!important;
-}
-
-.galleryRow{
-  grid-template-columns:repeat(4,1fr)!important;
+/* DONATE FOTO GALERI PANEL FIX */
+.compactGallery{
+  display:grid!important;
+  grid-template-columns:repeat(4, minmax(0,1fr))!important;
   gap:18px!important;
 }
-.photoCard{height:360px!important;border-color:rgba(255,0,0,.32)!important}
-.photoCard img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
-.photoCard:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.86));pointer-events:none}
-.photoCard h2{z-index:2!important;color:white!important;text-shadow:0 0 14px rgba(0,0,0,.95)!important}
-
-/* AI Assistant */
-.aiBox{position:fixed;right:22px;bottom:22px;z-index:80}
-.aiToggle{
-  background:linear-gradient(135deg,#ff0018,#79000b);
-  color:white;border:1px solid rgba(255,0,0,.45);
-  border-radius:999px;padding:13px 18px;font-weight:1000;
-  display:flex;align-items:center;gap:8px;cursor:pointer;
-  box-shadow:0 0 30px rgba(255,0,0,.22)
-}
-.aiPanel{width:360px;max-width:calc(100vw - 28px);padding:14px;margin-bottom:12px;background:rgba(5,5,5,.96)!important}
-.aiHead{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,0,0,.22);padding-bottom:10px}
-.aiHead button{background:transparent;border:0;color:white;font-size:26px;cursor:pointer}
-.aiMsgs{height:260px;overflow:auto;padding:10px 0;display:flex;flex-direction:column;gap:8px}
-.aiMsgs p{margin:0;padding:10px 12px;border-radius:12px;line-height:1.45}
-.aiMsgs .ai{background:#111;border:1px solid rgba(255,0,0,.20);color:#ddd;align-self:flex-start}
-.aiMsgs .user{background:linear-gradient(135deg,#ff0018,#79000b);color:white;align-self:flex-end}
-.aiInput{display:flex;gap:8px}
-.aiInput input{flex:1;background:#090909;border:1px solid rgba(255,0,0,.28);border-radius:10px;color:white;padding:12px;outline:0}
-.aiInput button{background:#e61127;color:white;border:0;border-radius:10px;padding:0 12px;font-weight:900;cursor:pointer}
-
-@media(max-width:1200px){.galleryRow{grid-template-columns:repeat(2,1fr)!important}}
-@media(max-width:1000px){
- .logo.logoImageBtn{width:145px!important;height:62px!important}
- .logo.logoImageBtn img{width:138px!important;max-height:58px!important}
- .heroBigLogo{width:230px!important}
- .galleryRow{grid-template-columns:1fr!important}
- .photoCard{height:330px!important}
- .aiBox{right:14px;bottom:14px}
-}
-
-
-/* =========================================================
-   HERO SABIT FOTO + YAZI YUKARI FIX
-   Ana hero sadece /images/yer6-main-hero.png kullanır.
-   Fotoğraf değişmez, slider kapalıdır.
-   ========================================================= */
-
-.hero{
-  height:760px!important;
-  position:relative!important;
-  overflow:hidden!important;
-}
-
-.heroImg{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  opacity:1!important;
-  transform:none!important;
-  transition:none!important;
-  display:block!important;
-}
-
-.heroDark{
-  background:
-    linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.28),rgba(0,0,0,.84)),
-    linear-gradient(180deg,rgba(0,0,0,.08),#05070a 96%)!important;
-}
-
-.heroText{
-  top:185px!important;
-  left:46px!important;
-  width:min(560px,90vw)!important;
-}
-
-.heroText>span{
-  display:block!important;
-  color:#ff1f31!important;
-  font-weight:1000!important;
-  margin-bottom:12px!important;
-}
-
-.heroText h1{
-  margin-top:8px!important;
-}
-
-.heroBigLogo{
-  display:none!important;
-}
-
-@media(max-width:1000px){
-  .hero{height:760px!important}
-  .heroText{
-    top:135px!important;
-    left:22px!important;
-  }
-}
-
-
-/* =========================================================
-   YER6 STAFF PHOTO + RANK FIX
-   Yönetim Kadrosu kartlarında fotoğraf desteği.
-   ========================================================= */
-
-.staffPhoto{
-  width:100%;
-  height:210px;
-  object-fit:cover;
-  border-radius:14px;
-  border:1px solid rgba(240,20,39,.28);
-  margin-bottom:16px;
-  display:block;
-  box-shadow:0 0 28px rgba(0,0,0,.35);
-}
-
-.staffCard{
+.photoThumbCard{
+  border:1px solid rgba(255,31,49,.28);
+  border-radius:20px;
   overflow:hidden;
-}
-
-.staffCard .badge.bad{
-  background:#3a0509;
-  color:#ff9aa8;
-  border-color:rgba(255,31,49,.35);
-}
-
-@media(max-width:1200px){
-  .staffGrid{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:700px){
-  .staffGrid{
-    grid-template-columns:1fr;
-  }
-}
-
-
-/* =========================================================
-   YER6 DONATE MARKET FOTO FIX
-   Her donate kartında 4 fotoğraf desteği.
-   ========================================================= */
-
-.donateCard{
-  overflow:hidden;
-}
-
-.donatePhotos{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-  margin-bottom:16px;
-}
-
-.donatePhotos img{
-  width:100%;
-  height:115px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid rgba(240,20,39,.28);
-  background:#05070a;
-  display:block;
-}
-
-.modalCard h3{
-  margin:16px 0 8px;
-}
-
-.muted{
-  color:#aaa;
-  font-size:14px;
-  line-height:1.5;
-}
-
-@media(max-width:700px){
-  .donatePhotos img{
-    height:140px;
-  }
-}
-
-
-/* =========================================================
-   YER6 DONATE FULL CATEGORY + PHOTO FIX
-   Çoklu donate kategori + her kartta 4 fotoğraf.
-   ========================================================= */
-
-.donateGrid{
-  grid-template-columns:repeat(3,1fr);
-}
-
-.donateCard{
-  overflow:hidden;
-}
-
-.donatePhotos{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-  margin-bottom:16px;
-}
-
-.donatePhotos img{
-  width:100%;
-  height:115px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid rgba(240,20,39,.28);
-  background:#05070a;
-  display:block;
-}
-
-.modalCard h3{
-  margin:16px 0 8px;
-}
-
-.muted{
-  color:#aaa;
-  font-size:14px;
-  line-height:1.5;
-}
-
-@media(max-width:1200px){
-  .donateGrid{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:700px){
-  .donateGrid{
-    grid-template-columns:1fr;
-  }
-  .donatePhotos img{
-    height:140px;
-  }
-}
-
-
-/* =========================================================
-   YER6 FOUNDER MANAGEMENT FIX
-   Founder özel yetkili kaldırma ve yetki değiştirme butonları.
-   ========================================================= */
-
-.staffActions{
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.dangerBtn{
-  border-color:rgba(255,31,49,.45)!important;
-  color:#ff9aa8!important;
-}
-
-.dangerBtn:hover{
-  background:#3a0509!important;
-  color:white!important;
-}
-
-@media(max-width:900px){
-  .staffActions{
-    justify-content:flex-start;
-  }
-}
-
-
-/* Founder action buttons fix */
-.staffActions .btn{
-  padding:10px 12px;
-  font-size:12px;
-  white-space:nowrap;
-}
-.staffActions{
-  align-items:center;
-}
-
-/* founder buttons final fix */
-.staffActions{display:flex!important;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
-.smallBtn{padding:9px 12px!important;font-size:12px!important;line-height:1!important;min-height:34px}
-.dangerBtn{border-color:rgba(255,31,49,.45)!important;color:#ff9aa8!important}
-.dangerBtn:hover{background:#3a0509!important;color:white!important}
-@media(max-width:900px){.staffActions{justify-content:flex-start}}
-
-
-/* =========================================================
-   YER6 PLAYER PANEL CLEAN FIX
-   Oyuncu panelinde sadece destek, talepler, başvuru ve profil görünür.
-   ========================================================= */
-
-.cleanPlayerPanel aside button{
-  font-size:16px;
-}
-
-.ticketThread{
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:16px;
-  background:rgba(0,0,0,.18);
-}
-
-.ticketMessages{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin:14px 0;
-}
-
-.ticketMsg{
-  max-width:760px;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.08);
-}
-
-.ticketMsg p{
-  margin:7px 0;
-  color:#ddd;
-}
-
-.ticketMsg small{
-  color:#777;
-}
-
-.playerMsg{
-  background:rgba(17,24,39,.65);
-  align-self:flex-start;
-}
-
-.staffMsg{
-  background:rgba(58,5,9,.72);
-  border-color:rgba(240,20,39,.28);
-  align-self:flex-end;
-}
-
-.ticketReply{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:10px;
-  align-items:center;
-}
-
-.ticketReply .field{
-  margin-bottom:0;
-}
-
-@media(max-width:800px){
-  .ticketReply{
-    grid-template-columns:1fr;
-  }
-}
-
-/* =========================================================
-   SAFE DONATE MARKET - only market page
-   ========================================================= */
-.donateLuxuryPage main{padding-top:120px!important}
-.donateLuxuryHero{
-  min-height:390px;
-  border:1px solid rgba(255,31,49,.25);
-  border-radius:28px;
-  padding:42px;
-  display:grid;
-  grid-template-columns:1.6fr .8fr;
-  gap:24px;
-  align-items:center;
-  background:radial-gradient(circle at 20% 20%,rgba(255,31,49,.23),transparent 34%),linear-gradient(135deg,#101116,#030306);
-  box-shadow:0 30px 90px rgba(0,0,0,.48);
-}
-.donateLuxuryHero span,.donateProductHead span{
-  color:#ff1f31;
-  font-weight:1000;
-  letter-spacing:3px;
-  font-size:13px;
-}
-.donateLuxuryHero h1{
-  font-size:clamp(42px,5vw,76px);
-  line-height:.95;
-  margin:14px 0;
-  text-transform:uppercase;
-}
-.donateLuxuryHero p,.donateLuxuryInfo p,.donateLuxuryBody p,.donateProductText p,.donateProductHead p{
-  color:#bdbdbd;
-  line-height:1.6;
-}
-.donateLuxuryInfo{padding:28px;background:linear-gradient(180deg,rgba(255,31,49,.14),rgba(0,0,0,.35))}
-.donateLuxuryInfo svg{color:#ff1f31}
-.donateLuxuryGrid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-  margin-top:34px;
-}
-.donateLuxuryCard{
-  padding:0!important;
-  overflow:hidden;
-  border-radius:22px;
-}
-.donateLuxuryImg{
-  height:190px;
-  display:grid;
-  place-items:center;
-  color:#ff1f31;
   background:#07090d;
+  padding:0;
+  cursor:pointer;
+  position:relative;
+  height:230px;
+  display:block;
+  text-align:left;
+  transition:.22s ease;
 }
-.donateLuxuryImg img{
+.photoThumbCard:hover{
+  transform:translateY(-5px);
+  border-color:rgba(255,31,49,.75);
+  box-shadow:0 18px 45px rgba(255,31,49,.14);
+}
+.photoThumbCard img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
 }
-.donateLuxuryBody{padding:20px}
-.donateLuxuryBody small,.donateProductText small{
-  color:#ff1f31;
+.photoThumbCard span{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:44px;
+  padding:9px 11px;
+  border-radius:12px;
+  background:rgba(0,0,0,.72);
+  color:#fff;
   font-weight:1000;
 }
-.donateLuxuryBody h2{font-size:24px;margin:8px 0}
-.donateLuxuryBody p{min-height:60px}
-.donateProductOverlay{
+.photoThumbCard em{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  color:#ff1f31;
+  font-style:normal;
+  font-weight:1000;
+  font-size:13px;
+  letter-spacing:.5px;
+}
+.singlePhotoOverlay{
   position:fixed;
   inset:0;
-  z-index:1000;
-  background:rgba(0,0,0,.82);
-  backdrop-filter:blur(10px);
+  z-index:1200;
+  background:rgba(0,0,0,.88);
+  backdrop-filter:blur(12px);
   display:grid;
   place-items:center;
   padding:22px;
 }
-.donateProductModal{
-  width:min(1200px,96vw);
-  max-height:90vh;
-  overflow:auto;
-  padding:28px!important;
+.singlePhotoPanel{
+  width:min(1050px,96vw);
+  max-height:92vh;
+  overflow:hidden;
+  padding:0!important;
   border-radius:26px;
 }
-.donateProductHead{
+.singlePhotoHead{
   display:flex;
-  justify-content:space-between;
-  gap:18px;
   align-items:flex-start;
-  border-bottom:1px solid rgba(255,31,49,.22);
-  padding-bottom:18px;
-  margin-bottom:20px;
+  justify-content:space-between;
+  gap:16px;
+  padding:22px 24px;
+  border-bottom:1px solid rgba(255,31,49,.25);
+  background:linear-gradient(180deg,rgba(255,31,49,.10),rgba(0,0,0,.12));
 }
-.donateProductHead h2{font-size:42px;margin:8px 0}
-.donateClose{
-  background:#2a0509;
-  color:#fff;
-  border:1px solid rgba(255,31,49,.4);
-  width:46px;
-  height:46px;
-  border-radius:14px;
+.singlePhotoHead span{
+  color:#ff1f31;
+  font-weight:1000;
+  letter-spacing:2px;
+  font-size:12px;
+}
+.singlePhotoHead h2{
+  margin:6px 0;
   font-size:30px;
-  cursor:pointer;
 }
-.donateProductGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:18px;
+.singlePhotoHead p{
+  color:#aaa;
+  margin:0;
 }
-.donateProductCard{
-  padding:0!important;
-  overflow:hidden;
-  border-radius:22px;
-}
-.donateProductPhoto{
-  height:230px;
+.singlePhotoFrame{
+  width:100%;
+  max-height:72vh;
   display:grid;
   place-items:center;
-  color:#ff1f31;
-  background:#07090d;
+  background:#020304;
+  padding:16px;
 }
-.donateProductPhoto img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+.singlePhotoFrame img{
+  max-width:100%;
+  max-height:68vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  border-radius:18px;
   display:block;
 }
-.donateProductText{padding:20px}
-.donateProductText h3{font-size:24px;margin:8px 0}
-@media(max-width:1200px){
- .donateLuxuryGrid{grid-template-columns:repeat(3,1fr)}
- .donateProductGrid{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){
+  .compactGallery{grid-template-columns:repeat(3, minmax(0,1fr))!important}
 }
-@media(max-width:850px){
- .donateLuxuryHero{grid-template-columns:1fr;padding:26px}
- .donateLuxuryGrid,.donateProductGrid{grid-template-columns:1fr}
+@media(max-width:760px){
+  .compactGallery{grid-template-columns:repeat(2, minmax(0,1fr))!important}
+  .photoThumbCard{height:190px}
+  .singlePhotoHead h2{font-size:24px}
+}
+@media(max-width:480px){
+  .compactGallery{grid-template-columns:1fr!important}
 }
 
-/* FINAL donate admin + market cleanup */
-.emptyDonateMarket{padding:28px!important;text-align:center}
-.donateAdminGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.donateAdminCard{padding:0!important;overflow:hidden}
-.donateAdminCover{height:190px;display:grid;place-items:center;background:#07090d;color:#ff1f31}
-.donateAdminCover img{width:100%;height:100%;object-fit:cover}
-.donateAdminBody{padding:20px}
-.donateAdminBody small{color:#ff1f31;font-weight:1000}
-.donateEditorModal{width:min(980px,96vw)!important;max-height:90vh;overflow:auto}
-.donateEditorModal label{display:block;color:#ccc;font-weight:900;margin:8px 0 6px}
-.donateEditorHead{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:18px 0 12px}
-.donateProductEditorList{display:grid;gap:14px}
-.donateProductEditor{padding:14px!important;display:grid;grid-template-columns:180px 1fr;gap:16px}
-.donateProductEditorPreview{height:180px;border-radius:14px;border:1px solid rgba(255,31,49,.25);display:grid;place-items:center;color:#ff1f31;overflow:hidden;background:#07090d}
-.donateProductEditorPreview img{width:100%;height:100%;object-fit:cover;display:block}
-.commandPreview code{margin-bottom:8px}
-@media(max-width:1000px){.donateAdminGrid{grid-template-columns:1fr}.donateProductEditor{grid-template-columns:1fr}}
+
+/* =========================================================
+   DONATE FOTO PANEL BOYUT FIX - DEV FOTO ENGELLEME
+   ========================================================= */
+
+/* Ürünleri görüntüle paneli ekrana tam yayılmasın */
+.donatePhotoOverlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:1200!important;
+  background:rgba(0,0,0,.82)!important;
+  backdrop-filter:blur(10px)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:22px!important;
+  overflow:auto!important;
+}
+
+/* İç panel ölçüsü */
+.donatePhotoModal{
+  width:min(1080px,94vw)!important;
+  max-height:86vh!important;
+  overflow:auto!important;
+  padding:24px!important;
+  border-radius:24px!important;
+  margin:auto!important;
+}
+
+/* Fotoğraflar küçük kart halinde */
+.donatePhotoGrid,
+.compactGallery{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:16px!important;
+  align-items:stretch!important;
+}
+
+/* Her foto kartı sabit boyutlu */
+.donateOnlyPhoto,
+.photoThumbCard{
+  height:180px!important;
+  max-height:180px!important;
+  min-height:180px!important;
+  width:100%!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:#07090d!important;
+  border:1px solid rgba(255,31,49,.32)!important;
+  padding:0!important;
+  display:block!important;
+  position:relative!important;
+}
+
+/* Kart içindeki foto devleşmesin */
+.donateOnlyPhoto img,
+.photoThumbCard img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+
+/* Başlık küçük kalsın */
+.donateOnlyPhoto span,
+.photoThumbCard span{
+  position:absolute!important;
+  left:10px!important;
+  right:10px!important;
+  bottom:10px!important;
+  padding:8px 10px!important;
+  border-radius:10px!important;
+  background:rgba(0,0,0,.72)!important;
+  color:#fff!important;
+  font-weight:900!important;
+  font-size:13px!important;
+}
+
+/* Fotoğraf tıklanınca açılan ikinci panel de dev olmasın */
+.singlePhotoOverlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:1300!important;
+  background:rgba(0,0,0,.88)!important;
+  backdrop-filter:blur(12px)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:24px!important;
+  overflow:auto!important;
+}
+
+.singlePhotoPanel{
+  width:min(820px,92vw)!important;
+  max-height:86vh!important;
+  overflow:hidden!important;
+  border-radius:24px!important;
+  margin:auto!important;
+}
+
+.singlePhotoFrame{
+  height:min(56vh,520px)!important;
+  max-height:520px!important;
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:#020304!important;
+  padding:14px!important;
+  overflow:hidden!important;
+}
+
+.singlePhotoFrame img{
+  max-width:100%!important;
+  max-height:100%!important;
+  width:auto!important;
+  height:auto!important;
+  object-fit:contain!important;
+  display:block!important;
+  border-radius:16px!important;
+}
+
+/* Mobil */
+@media(max-width:1100px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:760px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .donateOnlyPhoto,
+  .photoThumbCard{
+    height:150px!important;
+    max-height:150px!important;
+    min-height:150px!important;
+  }
+}
+@media(max-width:480px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:1fr!important;
+  }
+}
+
+
+/* =========================================================
+   ANA SAYFA BOYUT FIX - HERO/LOGO DEVLEŞME DÜZELTME
+   ========================================================= */
+
+.site .hero{
+  min-height:720px!important;
+  max-height:760px!important;
+  overflow:hidden!important;
+  position:relative!important;
+}
+
+.site .heroImg{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  display:block!important;
+}
+
+.site .heroDark{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+}
+
+.site .heroText{
+  position:relative!important;
+  z-index:3!important;
+  max-width:620px!important;
+}
+
+.site .heroText h1{
+  font-size:clamp(42px,4.5vw,72px)!important;
+  line-height:1.04!important;
+}
+
+.site .heroText p{
+  max-width:560px!important;
+}
+
+.site .status{
+  position:absolute!important;
+  right:48px!important;
+  top:210px!important;
+  z-index:4!important;
+  width:310px!important;
+  max-width:310px!important;
+}
+
+.logoImageBtn img,
+.header .logo img,
+footer .logo img{
+  width:auto!important;
+  height:42px!important;
+  max-width:135px!important;
+  object-fit:contain!important;
+}
+
+.galleryRow .photoCard img{
+  width:100%!important;
+  height:220px!important;
+  object-fit:cover!important;
+  max-height:220px!important;
+}
+
+@media(max-width:900px){
+  .site .hero{
+    min-height:760px!important;
+    max-height:none!important;
+  }
+  .site .status{
+    position:relative!important;
+    right:auto!important;
+    top:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin-top:24px!important;
+  }
+}
+
+
+/* =========================================================
+   DONATE MARKET - ÜRÜNLERI GÖRÜNTÜLE FOTO BOYUT FIX
+   Sadece donate foto panelini küçültür.
+   ========================================================= */
+
+.donatePhotoOverlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:9999!important;
+  background:rgba(0,0,0,.82)!important;
+  backdrop-filter:blur(10px)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:24px!important;
+  overflow:auto!important;
+}
+
+.donatePhotoModal{
+  width:min(980px,94vw)!important;
+  max-height:84vh!important;
+  overflow:auto!important;
+  border-radius:24px!important;
+  padding:24px!important;
+  margin:auto!important;
+}
+
+.donatePhotoGrid,
+.compactGallery{
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:16px!important;
+}
+
+.donateOnlyPhoto,
+.photoThumbCard{
+  width:100%!important;
+  height:155px!important;
+  min-height:155px!important;
+  max-height:155px!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+  position:relative!important;
+  display:block!important;
+  padding:0!important;
+  background:#07090d!important;
+  border:1px solid rgba(255,31,49,.32)!important;
+}
+
+.donateOnlyPhoto img,
+.photoThumbCard img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  display:block!important;
+}
+
+.donateOnlyPhoto span,
+.photoThumbCard span{
+  position:absolute!important;
+  left:10px!important;
+  right:10px!important;
+  bottom:10px!important;
+  padding:7px 10px!important;
+  border-radius:10px!important;
+  background:rgba(0,0,0,.72)!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+
+/* Fotoğrafa tıklayınca açılan büyük önizleme de kontrollü olsun */
+.singlePhotoPanel{
+  width:min(760px,92vw)!important;
+  max-height:82vh!important;
+  overflow:hidden!important;
+}
+
+.singlePhotoFrame{
+  height:460px!important;
+  max-height:58vh!important;
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  background:#020304!important;
+  padding:14px!important;
+}
+
+.singlePhotoFrame img{
+  max-width:100%!important;
+  max-height:100%!important;
+  width:auto!important;
+  height:auto!important;
+  object-fit:contain!important;
+  display:block!important;
+  border-radius:14px!important;
+}
+
+@media(max-width:1000px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:repeat(3,1fr)!important;
+  }
+}
+
+@media(max-width:700px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:repeat(2,1fr)!important;
+  }
+  .donateOnlyPhoto,
+  .photoThumbCard{
+    height:135px!important;
+    min-height:135px!important;
+    max-height:135px!important;
+  }
+}
+
+@media(max-width:450px){
+  .donatePhotoGrid,
+  .compactGallery{
+    grid-template-columns:1fr!important;
+  }
+}
