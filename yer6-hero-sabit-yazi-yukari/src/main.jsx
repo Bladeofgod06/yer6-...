@@ -464,6 +464,7 @@ function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,reg
 function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements}) {
  const [active,setActive]=useState('Destek Aç');
  const [ticket,setTicket]=useState({type:'Oyuncu Şikayet',title:'',description:'',proof:''});
+ const [banAppeal,setBanAppeal]=useState({charName:'',banReason:'',banDate:'',banAdmin:'',explanation:'',proof:''});
  const [replyText,setReplyText]=useState('');
  const [app,setApp]=useState({name:player.username||'',age:'',experience:'',reason:''});
  const myTickets=tickets.filter(t=>String(t.discordId)===String(player.discordId));
@@ -501,14 +502,39 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
  }
 
  async function closePlayerTicket(id){
-  if(!window.confirm('Bu ticket kapatılsın mı?')) return;
+  if(!window.confirm('Bu destek kapatılsın mı?')) return;
   const t=tickets.find(x=>String(x.id)===String(id));
   const ticketId=t?.dbId||id;
   const { error } = await supabase.from('tickets').update({state:'Kapalı'}).eq('id', ticketId);
-  if(error) return alert('Ticket kapatma hatası: '+error.message);
+  if(error) return alert('Destek kapatma hatası: '+error.message);
   setTickets(prev=>prev.map(x=>String(x.id)===String(id)?{...x,state:'Kapalı'}:x));
   setLogs(p=>[now()+' - oyuncu ticket kapattı: '+id,...p]);
   await addDbLog('TICKET_CLOSE_PLAYER', `${id} oyuncu tarafından kapatıldı.`, player.username);
+ }
+
+ async function sendBanAppeal() {
+  if(!banAppeal.charName.trim()||!banAppeal.banReason.trim()||!banAppeal.explanation.trim()) return alert('Karakter adı, ban sebebi ve itiraz açıklaması gerekli.');
+  const title=`Ban İtiraz Başvurusu - ${banAppeal.charName}`;
+  const description=[
+    `Karakter Adı: ${banAppeal.charName}`,
+    `Ban Sebebi: ${banAppeal.banReason}`,
+    `Ban Tarihi: ${banAppeal.banDate||'Belirtilmedi'}`,
+    `Banlayan Yetkili: ${banAppeal.banAdmin||'Belirtilmedi'}`,
+    '',
+    `İtiraz Açıklaması: ${banAppeal.explanation}`
+  ].join('\n');
+  const { data, error } = await supabase.from('tickets').insert({
+    username:player.username, discord_id:player.discordId, type:'Ban İtiraz Başvurusu', title,
+    description, proof:banAppeal.proof||'', state:'Açık', assigned:'Boşta'
+  }).select().single();
+  if(error) return alert('Ban itiraz başvurusu hatası: '+error.message);
+  await supabase.from('ticket_messages').insert({ticket_id:data.id, sender:player.username, role:'Oyuncu', message:description});
+  const item=dbTicketToApp({...data,ticket_messages:[{sender:player.username,role:'Oyuncu',message:description,created_at:new Date().toISOString()}]});
+  setTickets(p=>[item,...p]);
+  setLogs(p=>[now()+' - ban itiraz başvurusu açıldı: '+item.id,...p]);
+  await addDbLog('BAN_APPEAL_CREATE', `${player.username} ban itiraz başvurusu gönderdi: ${banAppeal.charName}`, player.username);
+  setBanAppeal({charName:'',banReason:'',banDate:'',banAdmin:'',explanation:'',proof:''});
+  setActive('Taleplerim');
  }
 
  async function sendApp() {
@@ -525,7 +551,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
   await addDbLog('APPLICATION_CREATE', `${player.username} başvuru gönderdi.`, player.username);
  }
 
- const menu=['Duyurular','Destek Aç','Taleplerim','Kapanan Ticketlar','Yetkili Başvuru','Profilim'];
+ const menu=['Duyurular','Destek Aç','Ban İtiraz Başvurusu','Taleplerim','Kapanan Destekler','Yetkili Başvuru','Profilim'];
  return <div className="adminLayout playerLayout cleanPlayerPanel">
   <aside>
    <Logo/>
@@ -538,11 +564,13 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
 
    {active==='Duyurular'&&<Card className="panel announcementBox"><h2><Bell size={18}/> Duyuru Kanalı</h2>{(!announcements||announcements.length===0)&&<p>Henüz duyuru yok.</p>}{(announcements||[]).map(a=><div className="announcementItem" key={a.id}><h3>{a.title}</h3><p>{a.content}</p><small>{a.createdAt}</small></div>)}</Card>}
 
-   {active==='Destek Aç'&&<Card className="panel"><h2>Destek Talebi Aç</h2><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>Ban İtiraz</option><option>WL İtiraz</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
+   {active==='Destek Aç'&&<Card className="panel"><h2>Destek Talebi Aç</h2><p>Ban itirazları artık ayrı başvuru formundan alınır. AC/OCEAN hile konuları için AC Destek seç.</p><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>WL İtiraz</option><option>AC Destek (OCEAN Hile)</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
 
-   {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Ticket Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
+   {active==='Ban İtiraz Başvurusu'&&<Card className="panel"><h2>Ban İtiraz Başvurusu</h2><p>Bu form normal destekten ayrıdır. Yetkililer başvurunu destek panelinde Ban İtiraz Başvurusu olarak görür.</p><div className="grid3"><Field value={banAppeal.charName} onChange={v=>setBanAppeal({...banAppeal,charName:v})} placeholder="Karakter adı"/><Field value={banAppeal.banReason} onChange={v=>setBanAppeal({...banAppeal,banReason:v})} placeholder="Ban sebebi"/><Field value={banAppeal.banDate} onChange={v=>setBanAppeal({...banAppeal,banDate:v})} placeholder="Ban tarihi"/></div><Field value={banAppeal.banAdmin} onChange={v=>setBanAppeal({...banAppeal,banAdmin:v})} placeholder="Banlayan yetkili / bilmiyorsan boş bırak"/><TextArea value={banAppeal.explanation} onChange={v=>setBanAppeal({...banAppeal,explanation:v})} placeholder="Neden banının kaldırılması gerektiğini detaylı yaz"/><Field value={banAppeal.proof} onChange={v=>setBanAppeal({...banAppeal,proof:v})} placeholder="Kanıt linki / video / ekran görüntüsü"/><Button onClick={sendBanAppeal}><Send size={16}/> Ban İtiraz Başvurusu Gönder</Button></Card>}
 
-   {active==='Kapanan Ticketlar'&&<Card className="panel"><h2>Kapanan Ticketlar</h2>{myClosedTickets.length===0&&<p>Kapanan ticket yok.</p>}{myClosedTickets.map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • Kapalı • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
+   {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Destek Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
+
+   {active==='Kapanan Destekler'&&<Card className="panel"><h2>Kapanan Destekler</h2>{myClosedTickets.length===0&&<p>Kapanan destek yok.</p>}{myClosedTickets.map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • Kapalı • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
 
    {active==='Yetkili Başvuru'&&<Card className="panel"><h2>Yetkili Başvurusu</h2>{myApp&&<Badge tone="note">Başvuru durumun: {myApp.status}</Badge>}<Field value={app.name} onChange={v=>setApp({...app,name:v})} placeholder="Ad Soyad"/><Field value={app.age} onChange={v=>setApp({...app,age:v})} placeholder="Yaş"/><TextArea value={app.experience} onChange={v=>setApp({...app,experience:v})} placeholder="Yetkili deneyimin"/><TextArea value={app.reason} onChange={v=>setApp({...app,reason:v})} placeholder="Neden yetkili olmak istiyorsun?"/><Button disabled={!!myApp} onClick={sendApp}>Başvuru Gönder</Button></Card>}
 
@@ -560,7 +588,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  const [editDonate,setEditDonate]=useState(null);
  const [punish,setPunish]=useState({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
  const rank=staffRanks.find(r=>r.rank===newAdmin.role)||staffRanks[0];
- const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Ticketlar','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
+ const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
 
  async function addAdmin(){
  if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');
@@ -683,7 +711,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
   {active==='Destekler'&&<Card className="panel"><h2>Aktif Destek Yönetimi</h2>{tickets.filter(t=>t.state!=='Kapalı').length===0&&<p>Aktif destek yok.</p>}{tickets.filter(t=>t.state!=='Kapalı').map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • {t.state} • {t.assigned}</p><small>{t.description}</small></div><div className="actions"><Button onClick={()=>assignTicket(t.id)}>Üstlen</Button><Button variant="ghost" onClick={()=>closeTicket(t.id)}>Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={staffReply} onChange={setStaffReply} placeholder="Oyuncuya mesaj yaz..."/><Button onClick={()=>addAdminTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
 
-  {active==='Kapanan Ticketlar'&&<Card className="panel"><h2>Kapanan Ticketlar</h2>{tickets.filter(t=>t.state==='Kapalı').length===0&&<p>Kapanan ticket yok.</p>}{tickets.filter(t=>t.state==='Kapalı').map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • Kapalı • {t.assigned}</p><small>{t.description}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
+  {active==='Kapanan Destekler'&&<Card className="panel"><h2>Kapanan Destekler</h2>{tickets.filter(t=>t.state==='Kapalı').length===0&&<p>Kapanan destek yok.</p>}{tickets.filter(t=>t.state==='Kapalı').map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • Kapalı • {t.assigned}</p><small>{t.description}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
   {active==='Başvurular'&&<Card className="panel"><h2>Yetkili Başvuruları</h2>{apps.length===0&&<p>Başvuru yok.</p>}{apps.map((a,i)=><div className="row" key={a.discordId+i}><div><b>{a.name||a.username}</b><p>{a.discordId} • {a.status}</p><small>{a.reason}</small></div><div className="actions"><Button onClick={()=>appResult(i,'Kabul Edildi')}>Kabul</Button><Button variant="ghost" onClick={()=>appResult(i,'Reddedildi')}>Reddet</Button></div></div>)}</Card>}
   {active==='Ceza Ver'&&<Card className="panel"><h2>Oyuncu / Yetkili Ceza Ver ve WL Al</h2><div className="grid3"><select className="field" value={punish.targetType} onChange={e=>setPunish({...punish,targetType:e.target.value})}><option>Oyuncu</option><option>Yetkili</option></select><Field value={punish.targetId} onChange={v=>setPunish({...punish,targetId:v})} placeholder="Discord ID"/><Field value={punish.targetName} onChange={v=>setPunish({...punish,targetName:v})} placeholder="İsim"/></div><div className="grid3"><select className="field" value={punish.rule} onChange={e=>{const r=rules.find(x=>x.name===e.target.value);setPunish({...punish,rule:e.target.value,penalty:r?.penalty||''})}}><option value="">Kural seç</option>{rules.map(r=><option key={r.id} value={r.name}>{r.name} - {r.penalty}</option>)}</select><Field value={punish.penalty} onChange={v=>setPunish({...punish,penalty:v})} placeholder="Ceza / WL süresi"/><Field value={punish.proof} onChange={v=>setPunish({...punish,proof:v})} placeholder="Kanıt linki"/></div><TextArea value={punish.note} onChange={v=>setPunish({...punish,note:v})} placeholder="Ceza notu"/>
 
