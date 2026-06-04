@@ -840,3 +840,88 @@
 @media(max-width:850px){
   .commandCards{grid-template-columns:1fr!important}
 }
+
+
+/* =========================================================
+   YER6 DUYURU + KÜÇÜK TICKET + KAPANAN TICKET FIX
+   ========================================================= */
+.compactTicket{
+  max-width:850px;
+  margin-left:auto;
+  margin-right:auto;
+  padding:12px;
+}
+
+.compactTicket .row{
+  margin-bottom:8px;
+}
+
+.compactMessages{
+  max-height:230px;
+  overflow-y:auto;
+  padding-right:6px;
+}
+
+.closedTicket{
+  opacity:.86;
+  max-height:105px;
+  overflow:hidden;
+  border-color:rgba(255,255,255,.12)!important;
+}
+
+.announcementBox{
+  padding:22px;
+}
+
+.announcementBox h2{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.announcementItem{
+  padding:16px;
+  border-radius:14px;
+  background:rgba(255,31,49,.08);
+  border:1px solid rgba(255,31,49,.22);
+  margin:14px 0;
+}
+
+.announcementItem h3{
+  margin:0 0 8px;
+  color:#ff1f31;
+}
+
+.announcementItem p{
+  color:#ddd;
+  line-height:1.55;
+  margin:0 0 8px;
+}
+
+.announcementItem small{
+  color:#888;
+}
+
+.adminAnnouncementItem{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+
+@media(max-width:800px){
+  .compactTicket{
+    max-width:100%;
+    padding:10px;
+  }
+  .compactMessages{
+    max-height:210px;
+  }
+  .adminAnnouncementItem{
+    display:block;
+  }
+  .adminAnnouncementItem .btn{
+    margin-top:10px;
+    width:100%;
+  }
+}
