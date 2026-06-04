@@ -408,8 +408,27 @@ function MarketPage({setPage,openLogin,donate}) {
 }
 
 function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,registerPlayer}) {
- const isAdmin=mode==='admin', isRegister=mode==='register';
- return <div className="loginPage"><Button variant="ghost" className="back" onClick={()=>setPage('home')}><Home size={16}/> Ana Sayfa</Button><Card className="loginCard"><h1>YER6 Giriş</h1><p>Admin, oyuncu girişi ve kayıt sistemi.</p><div className="tabs"><Button variant={isAdmin?'red':'ghost'} onClick={()=>setMode('admin')}>Admin</Button><Button variant={mode==='player'?'red':'ghost'} onClick={()=>setMode('player')}>Oyuncu</Button><Button variant={isRegister?'red':'ghost'} onClick={()=>setMode('register')}>Kayıt</Button></div>{isRegister&&<Field value={auth.username} onChange={v=>setAuth({...auth,username:v})} placeholder="Kullanıcı adı"/>}<Field value={auth.discordId} onChange={v=>setAuth({...auth,discordId:v})} placeholder="Discord ID"/><Field type="password" value={auth.password} onChange={v=>setAuth({...auth,password:v})} placeholder="Şifre"/>{isRegister&&<Field value={auth.steam} onChange={v=>setAuth({...auth,steam:v})} placeholder="Steam profil linki"/>}<Button className="full" onClick={isAdmin?loginAdmin:isRegister?registerPlayer:loginPlayer}>{isAdmin?'Admin Girişi Yap':isRegister?'Kayıt Ol ve Panele Gir':'Oyuncu Girişi Yap'}</Button></Card></div>
+ const isAdmin=mode==='admin';
+ const isRegister=mode==='register';
+ return <div className="loginPage">
+  <Button variant="ghost" className="back" onClick={()=>setPage('home')}><Home size={16}/> Ana Sayfa</Button>
+  <Card className="loginCard">
+   <h1>YER6 Giriş</h1>
+   <p>Admin, oyuncu girişi ve kayıt sistemi.</p>
+   <div className="tabs">
+    <Button variant={isAdmin?'red':'ghost'} onClick={()=>setMode('admin')}>Admin</Button>
+    <Button variant={mode==='player'?'red':'ghost'} onClick={()=>setMode('player')}>Oyuncu</Button>
+    <Button variant={isRegister?'red':'ghost'} onClick={()=>setMode('register')}>Kayıt</Button>
+   </div>
+   {isRegister&&<Field value={auth.username||''} onChange={v=>setAuth({...auth,username:v})} placeholder="Kullanıcı adı"/>}
+   <Field value={auth.discordId||''} onChange={v=>setAuth({...auth,discordId:v})} placeholder="Discord ID"/>
+   <Field type="password" value={auth.password||''} onChange={v=>setAuth({...auth,password:v})} placeholder="Şifre"/>
+   {isRegister&&<Field value={auth.steam||''} onChange={v=>setAuth({...auth,steam:v})} placeholder="Steam profil linki"/>}
+   <Button className="full" onClick={isAdmin?loginAdmin:isRegister?registerPlayer:loginPlayer}>
+    {isAdmin?'Admin Girişi Yap':isRegister?'Kayıt Ol ve Panele Gir':'Oyuncu Girişi Yap'}
+   </Button>
+  </Card>
+ </div>
 }
 
 function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs}) {
@@ -469,7 +488,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
    <Logo/>
    <p>{player.username}</p>
    {menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}
-   <Button variant="ghost" onClick={()=>{setPlayer(null);setPage('home')}}>Çıkış</Button>
+   <Button variant="ghost" onClick={()=>{localStorage.removeItem('yer6_player_session');setPlayer(null);setPage('home')}}>Çıkış</Button>
   </aside>
   <main>
    <Title k="OYUNCU PANELİ" t={'Hoş geldin, '+player.username} p="Destek açabilir, yetkili başvurusu gönderebilir ve yetkililerle destek üzerinden konuşabilirsin."/>
@@ -568,7 +587,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
 
- return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
+ return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{localStorage.removeItem('yer6_admin_session');setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Users/><div><span>Oyuncu</span><b>{players.length}</b></div></Card><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishments.length}</b></div></Card><Card className="stat"><Ticket/><div><span>Destek</span><b>{tickets.length}</b></div></Card></div>}
   {active==='Oyuncular'&&<Card className="panel"><h2>Oyuncular</h2>{players.length===0&&<p>Oyuncu yok.</p>}{players.map(p=><div className="row" key={p.discordId}><div><b>{p.username}</b><p>{p.discordId} • {p.wlStatus||'Aktif'}</p><small>{p.banReason||'Ceza yok'} {p.wlEndDate?('• Bitiş: '+(p.wlEndDate==='PERMA'?'PERMA':new Date(p.wlEndDate).toLocaleString('tr-TR'))):''}</small></div><Badge tone={p.wlStatus&&p.wlStatus!=='Aktif'?'bad':'good'}>{p.wlStatus||'Aktif'}</Badge></div>)}</Card>}
   {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><div className="actions staffActions"><Badge>{a.role}</Badge>{canFounderManage(admin)&&<><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</button></>}</div></div>)}</Card>}
@@ -682,7 +701,8 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 }
 
 function App(){
- const [page,setPage]=useState('home'); const [mode,setMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
+ const [page,setPage]=useState('home');
+ const [loginMode,setLoginMode]=useState('admin'); const [auth,setAuth]=useState({username:'',discordId:'',password:'',steam:''});
  const [admins,setAdmins]=useState(()=>JSON.parse(localStorage.getItem('yer6_admins_v19')||'null')||starterAdmins);
  const [players,setPlayers]=useState(()=>JSON.parse(localStorage.getItem('yer6_players_v10')||'null')||[]);
  const [donate,setDonate]=useState(()=>JSON.parse(localStorage.getItem('yer6_donate_v12')||'null')||donateDefault);
@@ -692,7 +712,7 @@ function App(){
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
  
- const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
+ const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_admin_session')||'null')}catch{return null}}); const [player,setPlayer]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_player_session')||'null')}catch{return null}});
 
  useEffect(()=>{ loadSupabaseData(); },[]);
 
@@ -758,25 +778,63 @@ function App(){
 
  useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]);
 
- function openLogin(m){setMode(m);setPage('login');setAuth({username:'',discordId:'',password:'',steam:''})}
- async function loginAdmin(){
-  if(!auth.discordId || !auth.password) return alert('Discord ID ve şifre gerekli.');
-  const { data, error } = await supabase.from('admins').select('*').eq('discord_id',auth.discordId).eq('password',auth.password).single();
-  if(error || !data) return alert('Admin bilgileri yanlış.');
-  const a=dbAdminToApp(data);
-  setAdmin(a);
-  setPage('admin');
-  await addDbLog('ADMIN_LOGIN', `${a.username} giriş yaptı.`, a.username);
-}
  function loginPlayer(){const p=players.find(x=>String(x.discordId).trim()===String(auth.discordId).trim()&&String(x.password).trim()===String(auth.password).trim());if(!p)return alert('Kullanıcı adı veya şifre yanlış.');setPlayer(p);setPage('player')}
 
- if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
+ 
+ function openLogin(mode='player'){
+  setLoginMode(mode);
+  setPage('login');
+ }
+
+ async function loginAdmin(){
+  if(!auth.discordId || !auth.password) return alert('Discord ID ve şifre gerekli.');
+  try{
+   const { data, error } = await supabase.from('admins').select('*').eq('discord_id',auth.discordId).eq('password',auth.password).single();
+   let adminData = (!error && data) ? dbAdminToApp(data) : null;
+   if(!adminData) adminData = starterAdmins.find(a=>String(a.discordId)===String(auth.discordId)&&String(a.password)===String(auth.password));
+   if(!adminData) return alert('Admin bilgileri yanlış.');
+   setAdmin(adminData);
+   localStorage.setItem('yer6_admin_session', JSON.stringify(adminData));
+   setPage('admin');
+   await addDbLog('ADMIN_LOGIN', `${adminData.username} giriş yaptı.`, adminData.username);
+  }catch(err){ alert('Admin giriş hatası: '+err.message); }
+ }
+
+ async function loginPlayer(){
+  if(!auth.discordId || !auth.password) return alert('Discord ID ve şifre gerekli.');
+  try{
+   const { data, error } = await supabase.from('players').select('*').eq('discord_id',auth.discordId).eq('password',auth.password).single();
+   if(error || !data) return alert('Oyuncu bilgileri yanlış.');
+   const playerData = dbPlayerToApp(data);
+   setPlayer(playerData);
+   localStorage.setItem('yer6_player_session', JSON.stringify(playerData));
+   setPage('player');
+  }catch(err){ alert('Oyuncu giriş hatası: '+err.message); }
+ }
+
+ async function registerPlayer(){
+  if(!auth.username || !auth.discordId || !auth.password) return alert('Kullanıcı adı, Discord ID ve şifre gerekli.');
+  try{
+   const { data, error } = await supabase.from('players').insert({
+    username:auth.username, discord_id:auth.discordId, password:auth.password, steam:auth.steam||'', wl_status:'Aktif'
+   }).select().single();
+   if(error) return alert('Kayıt hatası: '+error.message);
+   const playerData = dbPlayerToApp(data);
+   setPlayers(prev=>[playerData,...prev]);
+   setPlayer(playerData);
+   localStorage.setItem('yer6_player_session', JSON.stringify(playerData));
+   setPage('player');
+   await addDbLog('PLAYER_REGISTER', `${playerData.username} kayıt oldu.`, playerData.username);
+  }catch(err){ alert('Kayıt hatası: '+err.message); }
+ }
+
+if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
  if(page==='rules')return <RulesPage setPage={setPage} openLogin={openLogin}/>;
  if(page==='staff')return <StaffPage setPage={setPage} openLogin={openLogin} staffMembers={staffMembers}/>;
  if(page==='characters')return <CharactersPage setPage={setPage} openLogin={openLogin}/>;
  if(page==='game')return <GamePage setPage={setPage} openLogin={openLogin}/>;
  if(page==='market')return <MarketPage setPage={setPage} openLogin={openLogin} donate={donate}/>;
- if(page==='login')return <LoginPage setPage={setPage} mode={mode} setMode={setMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
+ if(page==='login') return <LoginPage setPage={setPage} mode={loginMode} setMode={setLoginMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
  if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs}/>;
  if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs}/>;
  return <HomePage setPage={setPage} openLogin={openLogin}/>
