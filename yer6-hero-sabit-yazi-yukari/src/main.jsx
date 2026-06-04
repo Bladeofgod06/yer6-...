@@ -547,11 +547,9 @@ function App(){
  const [apps,setApps]=useState(()=>JSON.parse(localStorage.getItem('yer6_apps_v10')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
  
- const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(null); const [player,setPlayer]=useState(null);
+ const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(()=>{try{const s=JSON.parse(localStorage.getItem('yer6_session')||'null');return s?.kind==='admin'?s.user:null}catch{return null}}); const [player,setPlayer]=useState(()=>{try{const s=JSON.parse(localStorage.getItem('yer6_session')||'null');return s?.kind==='player'?s.user:null}catch{return null}});
 
  useEffect(()=>{ loadSupabaseData(); },[]);
- useEffect(()=>{ if(admin) localStorage.setItem('yer6_session',JSON.stringify({kind:'admin',user:admin})); },[admin]);
- useEffect(()=>{ if(player) localStorage.setItem('yer6_session',JSON.stringify({kind:'player',user:player})); },[player]);
 
  async function loadSupabaseData(){
   try{
