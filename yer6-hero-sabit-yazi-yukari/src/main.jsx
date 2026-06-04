@@ -326,17 +326,23 @@ function HomePage({setPage,openLogin,announcements=[]}) {
    <img className="heroImg active" src="/images/yer6-main-hero.png" alt="YER6 Ana Hero"/><div className="heroDark"></div>
    <div className="heroText"><span>YER6 ROLEPLAY</span><h1>Bir Şehrin<br/><em>Yeni Hikayesi Başlıyor!</em></h1><p>Gerçekçi rol ortamı, aktif sistemler ve profesyonel yönetim kadrosuyla benzersiz bir deneyime katıl.</p><div className="heroButtons"><Button onClick={()=>openLogin('register')}><UserPlus size={18}/> Hemen Katıl</Button><Button variant="ghost" onClick={()=>window.open('https://discord.gg/ysewESgQm','_blank')}>Discord'da Katıl</Button></div></div>
    <Card className="status"><div><b>Sunucu Durumu</b><span>Çevrimiçi</span></div><p>IP Adresi <b>connect.yer6rp.com</b></p><p>Oyuncular <b>182 / 500</b></p><p>Ping <b>21ms</b></p><Button className="full" onClick={()=>window.location.href='fivem://connect/185.34.101.48:30120'}>Sunucuya Katıl</Button></Card>
-  </section>
-  <section className="homeAnnouncements">
-   <Card className="panel announcementBox">
-    <h2><Bell size={18}/> Son Duyurular</h2>
-    {(!announcements||announcements.length===0)&&<p>Henüz duyuru yok.</p>}
-    {(announcements||[]).slice(0,5).map(a=><div className="announcementItem" key={a.id}>
-     <h3>{a.title}</h3>
-     <p>{a.content}</p>
-     <small>{a.createdAt} {a.by?('• '+a.by):''}</small>
-    </div>)}
-   </Card>
+   <div className="heroAnnouncementDock">
+    <div className="heroAnnouncementHead">
+     <span><Bell size={16}/> YER6 DUYURU</span>
+     <b>Son Bilgilendirmeler</b>
+    </div>
+    <div className="heroAnnouncementList">
+     {(!announcements||announcements.length===0)&&<div className="heroAnnouncementEmpty">Henüz duyuru yok.</div>}
+     {(announcements||[]).slice(0,3).map(a=><div className="heroAnnouncementCard" key={a.id}>
+      <div className="heroAnnouncementIcon"><Bell size={16}/></div>
+      <div>
+       <h3>{a.title}</h3>
+       <p>{a.content}</p>
+       <small>{a.createdAt} {a.by?('• '+a.by):''}</small>
+      </div>
+     </div>)}
+    </div>
+   </div>
   </section>
   <section className="galleryRow">{gallery.map((g,i)=><Card className="photoCard" key={i}><img src={`/images/${g.img}`} alt={g.title}/><h2>{g.title}</h2></Card>)}</section>
   <AiAssistant/>
