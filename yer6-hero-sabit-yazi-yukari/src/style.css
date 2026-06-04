@@ -1154,3 +1154,20 @@
   .wheelPointer{left:50%;transform:translateX(-50%)}
   .wheelRewardGrid{grid-template-columns:1fr}
 }
+
+/* =========================================================
+   YER6 EVENT SYSTEM
+   Etkinlikler + Etkinlik Kuralları
+   ========================================================= */
+.eventPanel,.eventRulesPanel,.eventAdminPanel,.eventRulesAdmin{position:relative;overflow:hidden}
+.eventPanel:before,.eventAdminPanel:before,.eventRulesPanel:before,.eventRulesAdmin:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(240,20,39,.14),transparent 38%);pointer-events:none}
+.eventCard,.eventRuleCard{position:relative;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.24);border-radius:14px;padding:16px;margin:14px 0;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.eventCard b,.eventRuleCard b{color:#fff;font-size:17px}
+.eventCard p,.eventRuleCard p{margin:6px 0;color:#ff9aa8;font-weight:800}
+.eventCard small,.eventRuleCard small{display:block;color:#cbd5e1;line-height:1.6;white-space:pre-wrap}
+.eventParticipants{margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.eventParticipants b{display:block;margin-bottom:6px;color:#ff1f31}
+.eventParticipants small{color:#aaa;margin:3px 0}
+.checkLine{display:flex;align-items:center;gap:10px;margin:12px 0 18px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(240,20,39,.18);color:#ddd;font-weight:800}
+.checkLine input{width:18px;height:18px;accent-color:#e61127}
+@media(max-width:800px){.eventCard,.eventRuleCard{display:block}.eventCard .actions,.eventRuleCard .actions{margin-top:12px}}

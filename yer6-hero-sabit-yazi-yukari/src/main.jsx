@@ -36,6 +36,29 @@ const defaultPromoCodes = [
 function dbWheelRewardToApp(r){return {id:String(r.id),title:r.title,kind:r.kind||'ic_money',amount:Number(r.amount||0),chance:Number(r.chance||0),color:r.color||'#e61127',active:r.active!==false};}
 function dbPromoCodeToApp(c){return {id:String(c.id),code:c.code,title:c.title,kind:c.kind||'ic_money',amount:Number(c.amount||0),maxUses:Number(c.max_uses||c.maxUses||0),usedBy:c.used_by||c.usedBy||[],active:c.active!==false};}
 function dbPendingRewardToApp(r){return {id:String(r.id),username:r.username,discordId:r.discord_id,gameId:r.game_id||'',source:r.source,rewardTitle:r.reward_title,amount:Number(r.amount||0),status:r.status||'Bekliyor',command:r.command||'',createdAt:r.created_at?new Date(r.created_at).toLocaleString('tr-TR'):now(),deliveredBy:r.delivered_by||''};}
+
+const eventTemplatesDefault = [
+ 'Katilden Kaçış',
+ 'Yumruk Savaşı',
+ 'Saklambaç',
+ 'Labirentten Kaçış Etkinliği',
+ 'Sopa Savaşı',
+ 'Dragon Beach Club',
+ 'Gizli Araç',
+ "Sniper'dan Kaçış",
+ 'Çarpışan Araba',
+ 'Kartelden Kaç',
+ 'Saklı Aracı Bul',
+ 'Ejderden Kaçış'
+];
+const defaultEventRules = [
+ {id:'er-1',eventType:'Genel',title:'Genel Etkinlik Kuralları',content:'Etkinlik alanından izinsiz çıkmak, bug kullanmak, yetkilinin talimatına uymamak ve etkinliği baltalamak yasaktır.',active:true},
+ {id:'er-2',eventType:'Katilden Kaçış',title:'Katilden Kaçış Kuralları',content:'Tek can vardır. Zırh, bandaj, araç ve harita dışına çıkmak yasaktır. Katil dışında kimse saldırı yapamaz.',active:true},
+ {id:'er-3',eventType:'Yumruk Savaşı',title:'Yumruk Savaşı Kuralları',content:'Sadece yumruk kullanılabilir. Silah, sopa, zırh ve dışarıdan yardım yasaktır.',active:true}
+];
+function dbEventToApp(e){return {id:String(e.id),title:e.title||'',eventType:e.event_type||e.eventType||'',description:e.description||'',reward:e.reward||'',eventDate:e.event_date||e.eventDate||'',eventTime:e.event_time||e.eventTime||'',status:e.status||'Aktif',createdBy:e.created_by||e.createdBy||'',createdAt:e.created_at?new Date(e.created_at).toLocaleString('tr-TR'):now()};}
+function dbEventRuleToApp(r){return {id:String(r.id),eventType:r.event_type||r.eventType||'Genel',title:r.title||'',content:r.content||'',active:r.active!==false,createdBy:r.created_by||r.createdBy||'',createdAt:r.created_at?new Date(r.created_at).toLocaleString('tr-TR'):now()};}
+function dbEventParticipantToApp(x){return {id:String(x.id),eventId:String(x.event_id||x.eventId),username:x.username,discordId:x.discord_id||x.discordId,status:x.status||'Katıldı',rulesAccepted:x.rules_accepted!==false,createdAt:x.created_at?new Date(x.created_at).toLocaleString('tr-TR'):now()};}
 function rewardCommand(gameId, amount){return gameId && Number(amount)>0 ? `/web para bank ${gameId} ${Number(amount)}` : 'Manuel teslim gerekli';}
 function pickWeightedReward(rewards){
  const list=(rewards||[]).filter(r=>r.active!==false && Number(r.chance)>0);
@@ -603,7 +626,7 @@ function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,reg
  </div>
 }
 
-function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements,banAppeals,setBanAppeals,wheelRewards,promoCodes,pendingRewards,setPendingRewards,referrals,setReferrals}) {
+function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements,banAppeals,setBanAppeals,wheelRewards,promoCodes,pendingRewards,setPendingRewards,referrals,setReferrals,events,eventRules,eventParticipants,setEventParticipants}) {
  const [active,setActive]=useState('AC (OCEAN) Destek');
  const [ticket,setTicket]=useState({type:'AC (OCEAN) Destek',title:'',description:'',proof:''});
  const [replyText,setReplyText]=useState('');
@@ -613,6 +636,8 @@ function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTic
  const [promoInput,setPromoInput]=useState('');
  const [refInput,setRefInput]=useState('');
  const [spinResult,setSpinResult]=useState(null);
+ const [acceptedEventRules,setAcceptedEventRules]=useState(false);
+ const myEventParts=(eventParticipants||[]).filter(x=>String(x.discordId)===String(player.discordId));
  const myTickets=tickets.filter(t=>String(t.discordId)===String(player.discordId));
  const myOpenTickets=myTickets.filter(t=>t.state!=='Kapalı');
  const myClosedTickets=myTickets.filter(t=>t.state==='Kapalı');
@@ -738,6 +763,21 @@ function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTic
   setRefInput(''); alert('Referans kaydedildi. Ödül yönetime düştü.');
  }
 
+ async function joinEvent(eventId){
+  if(!acceptedEventRules) return alert('Etkinliğe katılmadan önce kuralları okuyup onaylamalısın.');
+  const ev=(events||[]).find(e=>String(e.id)===String(eventId));
+  if(!ev) return alert('Etkinlik bulunamadı.');
+  const already=(eventParticipants||[]).some(x=>String(x.eventId)===String(eventId)&&String(x.discordId)===String(player.discordId));
+  if(already) return alert('Bu etkinliğe zaten katıldın.');
+  const payload={event_id:eventId,username:player.username,discord_id:player.discordId,status:'Katıldı',rules_accepted:true};
+  const {data,error}=await supabase.from('event_participants').insert(payload).select().single();
+  if(error) console.log('Etkinlik katılım Supabase kayıt hatası:',error.message);
+  const item=data?dbEventParticipantToApp(data):{id:'local-'+Date.now(),eventId:String(eventId),username:player.username,discordId:player.discordId,status:'Katıldı',rulesAccepted:true,createdAt:now()};
+  setEventParticipants(p=>[item,...(p||[])]);
+  await addDbLog('EVENT_JOIN', `${player.username} etkinliğe katıldı: ${ev.title}`, player.username);
+  alert('Etkinliğe katılımın alındı.');
+ }
+
  async function sendApp() {
   if(myApp) return alert('Bu hesap daha önce başvuru göndermiş.');
   if(!app.name||!app.reason) return alert('Ad ve başvuru nedeni gerekli.');
@@ -752,7 +792,7 @@ function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTic
   await addDbLog('APPLICATION_CREATE', `${player.username} başvuru gönderdi.`, player.username);
  }
 
- const menu=['Duyurular','Şans Çarkı','Kod Kullan','Referans Sistemi','Ödüllerim','AC (OCEAN) Destek','Taleplerim','Kapanan Destekler','Ban İtiraz Başvurusu','Yetkili Başvuru','Profilim'];
+ const menu=['Duyurular','Şans Çarkı','Kod Kullan','Referans Sistemi','Ödüllerim','Etkinlikler','Etkinlik Kuralları','AC (OCEAN) Destek','Taleplerim','Kapanan Destekler','Ban İtiraz Başvurusu','Yetkili Başvuru','Profilim'];
  return <div className="adminLayout playerLayout cleanPlayerPanel">
   <aside>
    <Logo/>
@@ -773,6 +813,11 @@ function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTic
 
    {active==='Ödüllerim'&&<Card className="panel"><h2>🎒 Ödüllerim</h2>{(pendingRewards||[]).filter(r=>String(r.discordId)===String(player.discordId)).length===0&&<p>Ödülün yok.</p>}{(pendingRewards||[]).filter(r=>String(r.discordId)===String(player.discordId)).map(r=><div className="row" key={r.id}><div><b>{r.rewardTitle}</b><p>{r.source} • {r.status}</p><small>{r.createdAt}</small></div><Badge tone={r.status==='Teslim Edildi'?'good':'warn'}>{r.status}</Badge></div>)}</Card>}
 
+
+   {active==='Etkinlikler'&&<Card className="panel eventPanel"><h2>🎉 Etkinlikler</h2><p>Aktif etkinliklere buradan katılabilirsin. Katılmadan önce etkinlik kurallarını okuman gerekir.</p><label className="checkLine"><input type="checkbox" checked={acceptedEventRules} onChange={e=>setAcceptedEventRules(e.target.checked)}/> Etkinlik kurallarını okudum ve kabul ediyorum.</label>{(!events||events.filter(e=>e.status==='Aktif').length===0)&&<p>Aktif etkinlik yok.</p>}{(events||[]).filter(e=>e.status==='Aktif').map(e=>{const joined=myEventParts.some(x=>String(x.eventId)===String(e.id));return <div className="eventCard" key={e.id}><div><b>{e.title}</b><p>{e.eventType} • {e.eventDate||'Tarih yok'} {e.eventTime||''}</p><small>{e.description}</small>{e.reward&&<div className="miniCommand">Ödül: {e.reward}</div>}</div><div className="actions"><Badge tone={joined?'good':'warn'}>{joined?'Katıldın':'Açık'}</Badge>{!joined&&<Button onClick={()=>joinEvent(e.id)}>Katıl</Button>}</div></div>})}</Card>}
+
+   {active==='Etkinlik Kuralları'&&<Card className="panel eventRulesPanel"><h2>📜 Etkinlik Kuralları</h2><p>Etkinliklere katılan herkes bu kuralları kabul etmiş sayılır.</p>{(!eventRules||eventRules.length===0)&&<p>Henüz etkinlik kuralı eklenmedi.</p>}{(eventRules||[]).filter(r=>r.active!==false).map(r=><div className="eventRuleCard" key={r.id}><b>{r.title}</b><p>{r.eventType}</p><small>{r.content}</small></div>)}</Card>}
+
    {active==='AC (OCEAN) Destek'&&<Card className="panel"><h2>AC (OCEAN) Destek Aç</h2><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>AC (OCEAN) Destek</option><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>WL İtiraz</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
 
    {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Ticket Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
@@ -789,7 +834,7 @@ function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTic
  </div>
 }
 
-function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,donate,setDonate,staffRanks,setStaffRanks,staffMembers,setStaffMembers,tickets,setTickets,apps,setApps,banAppeals,setBanAppeals,punishments,setPunishments,logs,setLogs,announcements,setAnnouncements,wheelRewards,setWheelRewards,promoCodes,setPromoCodes,pendingRewards,setPendingRewards,referrals,setReferrals}) {
+function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,donate,setDonate,staffRanks,setStaffRanks,staffMembers,setStaffMembers,tickets,setTickets,apps,setApps,banAppeals,setBanAppeals,punishments,setPunishments,logs,setLogs,announcements,setAnnouncements,wheelRewards,setWheelRewards,promoCodes,setPromoCodes,pendingRewards,setPendingRewards,referrals,setReferrals,events,setEvents,eventRules,setEventRules,eventParticipants,setEventParticipants}) {
  const [active,setActive]=useState('Dashboard');
  const [staffReply,setStaffReply]=useState('');
  const [announcement,setAnnouncement]=useState({title:'',content:''});
@@ -799,8 +844,10 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  const [punish,setPunish]=useState({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
  const [newWheelReward,setNewWheelReward]=useState({title:'100.000 IC Para',kind:'ic_money',amount:100000,chance:10,color:'#e61127',active:true});
  const [newPromoCode,setNewPromoCode]=useState({code:'YER6',title:'100.000 IC Para',kind:'ic_money',amount:100000,maxUses:50,active:true});
+ const [newEvent,setNewEvent]=useState({title:'Katilden Kaçış',eventType:'Katilden Kaçış',description:'',reward:'',eventDate:'',eventTime:'',status:'Aktif'});
+ const [newEventRule,setNewEventRule]=useState({eventType:'Genel',title:'Genel Etkinlik Kuralları',content:'',active:true});
  const rank=staffRanks.find(r=>r.rank===newAdmin.role)||staffRanks[0];
- const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler',...(canViewBanAppeals(admin)?['Ban İtirazları']:[]),'Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Çark Ayarları','Kod Yönetimi','Referans Yönetimi','Bekleyen Ödüller','Loglar'];
+ const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler',...(canViewBanAppeals(admin)?['Ban İtirazları']:[]),'Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Etkinlikler','Etkinlik Kuralları','Çark Ayarları','Kod Yönetimi','Referans Yönetimi','Bekleyen Ödüller','Loglar'];
 
  async function addAdmin(){
  if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');
@@ -933,6 +980,45 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   await supabase.from('staff_members').update({rank:next.rank,level:next.level}).eq('discord_id',id);
   setStaffMembers(prev=>prev.map(s=>String(s.discordId)===id?{...s,rank:next.rank,level:next.level}:s));
   await addDbLog('STAFF_RANK_UPDATE', `${target.name}: ${target.rank} -> ${next.rank}`, admin.username);
+ }
+
+
+ async function addEvent(){
+  if(!newEvent.title.trim()) return alert('Etkinlik adı gerekli.');
+  const payload={title:newEvent.title.trim(),event_type:newEvent.eventType,description:newEvent.description,reward:newEvent.reward,event_date:newEvent.eventDate,event_time:newEvent.eventTime,status:newEvent.status||'Aktif',created_by:admin.username};
+  const {data,error}=await supabase.from('events').insert(payload).select().single();
+  if(error) console.log('Etkinlik Supabase kayıt hatası:',error.message);
+  const item=data?dbEventToApp(data):{id:'local-'+Date.now(),title:payload.title,eventType:payload.event_type,description:payload.description,reward:payload.reward,eventDate:payload.event_date,eventTime:payload.event_time,status:payload.status,createdBy:admin.username,createdAt:now()};
+  setEvents(p=>[item,...(p||[])]);
+  await addDbLog('EVENT_CREATE', `${item.title} etkinliği oluşturuldu.`, admin.username);
+  setNewEvent({title:'Katilden Kaçış',eventType:'Katilden Kaçış',description:'',reward:'',eventDate:'',eventTime:'',status:'Aktif'});
+ }
+ async function updateEventStatus(id,status){
+  await supabase.from('events').update({status}).eq('id',id);
+  setEvents(p=>(p||[]).map(e=>String(e.id)===String(id)?{...e,status}:e));
+  await addDbLog('EVENT_STATUS', `${id} etkinliği ${status} yapıldı.`, admin.username);
+ }
+ async function deleteEvent(id){
+  if(!confirm('Etkinlik silinsin mi?')) return;
+  await supabase.from('events').delete().eq('id',id);
+  setEvents(p=>(p||[]).filter(e=>String(e.id)!==String(id)));
+  await addDbLog('EVENT_DELETE', `${id} etkinliği silindi.`, admin.username);
+ }
+ async function addEventRule(){
+  if(!newEventRule.title.trim()||!newEventRule.content.trim()) return alert('Kural başlığı ve içeriği gerekli.');
+  const payload={event_type:newEventRule.eventType,title:newEventRule.title.trim(),content:newEventRule.content.trim(),active:newEventRule.active!==false,created_by:admin.username};
+  const {data,error}=await supabase.from('event_rules').insert(payload).select().single();
+  if(error) console.log('Etkinlik kuralı Supabase kayıt hatası:',error.message);
+  const item=data?dbEventRuleToApp(data):{id:'local-'+Date.now(),eventType:payload.event_type,title:payload.title,content:payload.content,active:payload.active,createdBy:admin.username,createdAt:now()};
+  setEventRules(p=>[item,...(p||[])]);
+  await addDbLog('EVENT_RULE_ADD', `${item.title} kuralı eklendi.`, admin.username);
+  setNewEventRule({eventType:'Genel',title:'Genel Etkinlik Kuralları',content:'',active:true});
+ }
+ async function deleteEventRule(id){
+  if(!confirm('Etkinlik kuralı silinsin mi?')) return;
+  await supabase.from('event_rules').delete().eq('id',id);
+  setEventRules(p=>(p||[]).filter(r=>String(r.id)!==String(id)));
+  await addDbLog('EVENT_RULE_DELETE', `${id} etkinlik kuralı silindi.`, admin.username);
  }
 
 
@@ -1176,6 +1262,11 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  </Card></div>}
 
 
+
+ {active==='Etkinlikler'&&<Card className="panel eventAdminPanel"><h2>🎉 Etkinlik Yönetimi</h2><p>Hazır şablon seç, tarih/saat ve ödül gir. Oyuncular panelden katılabilir.</p><div className="grid4"><select className="field" value={newEvent.eventType} onChange={e=>setNewEvent({...newEvent,eventType:e.target.value,title:e.target.value})}>{eventTemplatesDefault.map(x=><option key={x}>{x}</option>)}</select><Field value={newEvent.title} onChange={v=>setNewEvent({...newEvent,title:v})} placeholder="Etkinlik adı"/><Field type="date" value={newEvent.eventDate} onChange={v=>setNewEvent({...newEvent,eventDate:v})} placeholder="Tarih"/><Field value={newEvent.eventTime} onChange={v=>setNewEvent({...newEvent,eventTime:v})} placeholder="Saat örn: 22:30"/></div><TextArea value={newEvent.description} onChange={v=>setNewEvent({...newEvent,description:v})} placeholder="Etkinlik açıklaması"/><Field value={newEvent.reward} onChange={v=>setNewEvent({...newEvent,reward:v})} placeholder="Ödül örn: 1. 500K IC, 2. 300K IC"/><Button onClick={addEvent}>Etkinlik Oluştur</Button><h3>Etkinlikler</h3>{(!events||events.length===0)&&<p>Etkinlik yok.</p>}{(events||[]).map(e=>{const parts=(eventParticipants||[]).filter(p=>String(p.eventId)===String(e.id));return <div className="eventCard" key={e.id}><div><b>{e.title}</b><p>{e.eventType} • {e.eventDate||'Tarih yok'} {e.eventTime||''} • {e.status}</p><small>{e.description}</small>{e.reward&&<div className="miniCommand">Ödül: {e.reward}</div>}<div className="eventParticipants"><b>Katılanlar ({parts.length})</b>{parts.length===0&&<p>Katılan yok.</p>}{parts.map(p=><small key={p.id}>• {p.username} / {p.discordId} / {p.createdAt}</small>)}</div></div><div className="actions"><Badge tone={e.status==='Aktif'?'good':'bad'}>{e.status}</Badge>{e.status==='Aktif'?<Button variant="ghost" onClick={()=>updateEventStatus(e.id,'Kapalı')}>Kapat</Button>:<Button variant="ghost" onClick={()=>updateEventStatus(e.id,'Aktif')}>Aktif Yap</Button>}<Button variant="ghost" onClick={()=>deleteEvent(e.id)}>Sil</Button></div></div>})}</Card>}
+
+ {active==='Etkinlik Kuralları'&&<Card className="panel eventRulesAdmin"><h2>📜 Etkinlik Kuralları Yönetimi</h2><p>Kuralları buradan sen yazacaksın. Oyuncu panelinde Etkinlik Kuralları bölümünde görünecek.</p><div className="grid3"><select className="field" value={newEventRule.eventType} onChange={e=>setNewEventRule({...newEventRule,eventType:e.target.value})}><option>Genel</option>{eventTemplatesDefault.map(x=><option key={x}>{x}</option>)}</select><Field value={newEventRule.title} onChange={v=>setNewEventRule({...newEventRule,title:v})} placeholder="Kural başlığı"/><Button onClick={addEventRule}>Kural Ekle</Button></div><TextArea value={newEventRule.content} onChange={v=>setNewEventRule({...newEventRule,content:v})} placeholder="Kural içeriğini yaz"/>{(!eventRules||eventRules.length===0)&&<p>Kural yok.</p>}{(eventRules||[]).map(r=><div className="eventRuleCard" key={r.id}><div><b>{r.title}</b><p>{r.eventType} • {r.active!==false?'Aktif':'Pasif'}</p><small>{r.content}</small></div><Button variant="ghost" onClick={()=>deleteEventRule(r.id)}>Sil</Button></div>)}</Card>}
+
  {active==='Çark Ayarları'&&<Card className="panel"><h2>🎡 Çark Ayarları</h2><p>Ödül ve yüzde ayarlarını buradan yönet. Yüzdeleri sen belirliyorsun.</p><div className="grid4"><Field value={newWheelReward.title} onChange={v=>setNewWheelReward({...newWheelReward,title:v})} placeholder="Ödül adı"/><select className="field" value={newWheelReward.kind} onChange={e=>setNewWheelReward({...newWheelReward,kind:e.target.value})}><option value="ic_money">IC Para</option><option value="manual">Manuel Ödül</option><option value="empty">Boş</option></select><Field value={String(newWheelReward.amount)} onChange={v=>setNewWheelReward({...newWheelReward,amount:v})} placeholder="Miktar"/><Field value={String(newWheelReward.chance)} onChange={v=>setNewWheelReward({...newWheelReward,chance:v})} placeholder="Yüzde"/></div><div className="grid3"><Field value={newWheelReward.color} onChange={v=>setNewWheelReward({...newWheelReward,color:v})} placeholder="#e61127"/><Button onClick={addWheelReward}>Ödül Ekle</Button></div>{(wheelRewards||[]).map(r=><div className="row" key={r.id}><div><b>{r.title}</b><p>{r.kind} • {r.amount} • Şans: %{r.chance}</p></div><div className="actions"><Badge>{r.active!==false?'Aktif':'Pasif'}</Badge><Button variant="ghost" onClick={()=>removeWheelReward(r.id)}>Sil</Button></div></div>)}</Card>}
 
  {active==='Kod Yönetimi'&&<Card className="panel"><h2>🎁 Kod Yönetimi</h2><div className="grid4"><Field value={newPromoCode.code} onChange={v=>setNewPromoCode({...newPromoCode,code:v})} placeholder="Kod"/><Field value={newPromoCode.title} onChange={v=>setNewPromoCode({...newPromoCode,title:v})} placeholder="Ödül adı"/><Field value={String(newPromoCode.amount)} onChange={v=>setNewPromoCode({...newPromoCode,amount:v})} placeholder="IC miktar"/><Field value={String(newPromoCode.maxUses)} onChange={v=>setNewPromoCode({...newPromoCode,maxUses:v})} placeholder="Kullanım limiti"/></div><Button onClick={addPromoCode}>Kod Ekle</Button>{(promoCodes||[]).map(c=><div className="row" key={c.id}><div><b>{c.code}</b><p>{c.title} • {c.amount} IC • Kullanım: {(c.usedBy||[]).length}/{c.maxUses||'∞'}</p></div><div className="actions"><Badge>{c.active!==false?'Aktif':'Pasif'}</Badge><Button variant="ghost" onClick={()=>removePromoCode(c.id)}>Sil</Button></div></div>)}</Card>}
@@ -1206,6 +1297,9 @@ function App(){
  const [promoCodes,setPromoCodes]=useState(()=>JSON.parse(localStorage.getItem('yer6_promo_codes_v1')||'null')||defaultPromoCodes);
  const [pendingRewards,setPendingRewards]=useState(()=>JSON.parse(localStorage.getItem('yer6_pending_rewards_v1')||'null')||[]);
  const [referrals,setReferrals]=useState(()=>JSON.parse(localStorage.getItem('yer6_referrals_v1')||'null')||[]);
+ const [events,setEvents]=useState(()=>JSON.parse(localStorage.getItem('yer6_events_v1')||'null')||[]);
+ const [eventRules,setEventRules]=useState(()=>JSON.parse(localStorage.getItem('yer6_event_rules_v1')||'null')||defaultEventRules);
+ const [eventParticipants,setEventParticipants]=useState(()=>JSON.parse(localStorage.getItem('yer6_event_participants_v1')||'null')||[]);
  
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_admin_session')||'null')}catch{return null}}); const [player,setPlayer]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_player_session')||'null')}catch{return null}});
 
@@ -1227,7 +1321,7 @@ function App(){
 
  async function loadSupabaseData(){
   try{
-    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes,wheelRewardsRes,promoCodesRes,pendingRewardsRes,referralsRes]=await Promise.all([
+    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes,wheelRewardsRes,promoCodesRes,pendingRewardsRes,referralsRes,eventsRes,eventRulesRes,eventParticipantsRes]=await Promise.all([
       supabase.from('admins').select('*').order('level',{ascending:false}),
       supabase.from('players').select('*').order('created_at',{ascending:false}),
       supabase.from('staff_ranks').select('*').order('level',{ascending:true}),
@@ -1242,7 +1336,10 @@ function App(){
       supabase.from('wheel_rewards').select('*').order('id',{ascending:true}),
       supabase.from('promo_codes').select('*').order('id',{ascending:true}),
       supabase.from('pending_rewards').select('*').order('created_at',{ascending:false}),
-      supabase.from('referrals').select('*').order('created_at',{ascending:false})
+      supabase.from('referrals').select('*').order('created_at',{ascending:false}),
+      supabase.from('events').select('*').order('created_at',{ascending:false}),
+      supabase.from('event_rules').select('*').order('created_at',{ascending:false}),
+      supabase.from('event_participants').select('*').order('created_at',{ascending:false})
     ]);
     if(!adminsRes.error && adminsRes.data?.length) setAdmins(adminsRes.data.map(dbAdminToApp));
     if(!playersRes.error) setPlayers((playersRes.data||[]).map(dbPlayerToApp));
@@ -1259,6 +1356,9 @@ function App(){
     if(!promoCodesRes.error && promoCodesRes.data?.length) setPromoCodes((promoCodesRes.data||[]).map(dbPromoCodeToApp));
     if(!pendingRewardsRes.error) setPendingRewards((pendingRewardsRes.data||[]).map(dbPendingRewardToApp));
     if(!referralsRes.error) setReferrals((referralsRes.data||[]).map(r=>({id:String(r.id),referrerDiscordId:r.referrer_discord_id,referrerUsername:r.referrer_username,referredDiscordId:r.referred_discord_id,referredUsername:r.referred_username,status:r.status||'Bekliyor',createdAt:r.created_at?new Date(r.created_at).toLocaleString('tr-TR'):now()})));
+    if(!eventsRes.error) setEvents((eventsRes.data||[]).map(dbEventToApp));
+    if(!eventRulesRes.error && eventRulesRes.data?.length) setEventRules((eventRulesRes.data||[]).map(dbEventRuleToApp));
+    if(!eventParticipantsRes.error) setEventParticipants((eventParticipantsRes.data||[]).map(dbEventParticipantToApp));
   }catch(e){ console.log('Supabase veri çekme hatası', e); }
  }
 
@@ -1281,7 +1381,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_ban_appeals_v1',JSON.stringify(banAppeals)),[banAppeals]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]); useEffect(()=>localStorage.setItem('yer6_announcements_v1',JSON.stringify(announcements)),[announcements]); useEffect(()=>localStorage.setItem('yer6_wheel_rewards_v1',JSON.stringify(wheelRewards)),[wheelRewards]); useEffect(()=>localStorage.setItem('yer6_promo_codes_v1',JSON.stringify(promoCodes)),[promoCodes]); useEffect(()=>localStorage.setItem('yer6_pending_rewards_v1',JSON.stringify(pendingRewards)),[pendingRewards]); useEffect(()=>localStorage.setItem('yer6_referrals_v1',JSON.stringify(referrals)),[referrals]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_ban_appeals_v1',JSON.stringify(banAppeals)),[banAppeals]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]); useEffect(()=>localStorage.setItem('yer6_announcements_v1',JSON.stringify(announcements)),[announcements]); useEffect(()=>localStorage.setItem('yer6_wheel_rewards_v1',JSON.stringify(wheelRewards)),[wheelRewards]); useEffect(()=>localStorage.setItem('yer6_promo_codes_v1',JSON.stringify(promoCodes)),[promoCodes]); useEffect(()=>localStorage.setItem('yer6_pending_rewards_v1',JSON.stringify(pendingRewards)),[pendingRewards]); useEffect(()=>localStorage.setItem('yer6_referrals_v1',JSON.stringify(referrals)),[referrals]); useEffect(()=>localStorage.setItem('yer6_events_v1',JSON.stringify(events)),[events]); useEffect(()=>localStorage.setItem('yer6_event_rules_v1',JSON.stringify(eventRules)),[eventRules]); useEffect(()=>localStorage.setItem('yer6_event_participants_v1',JSON.stringify(eventParticipants)),[eventParticipants]);
 
  function openLogin(mode='player'){
   setLoginMode(mode);
@@ -1339,8 +1439,8 @@ if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin} announ
  if(page==='market')return <MarketPage setPage={setPage} openLogin={openLogin} donate={donate}/>;
  if(page==='wheel')return <WheelPage setPage={setPage} openLogin={openLogin} wheelRewards={wheelRewards}/>;
  if(page==='login') return <LoginPage setPage={setPage} mode={loginMode} setMode={setLoginMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
- if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs} announcements={announcements} setAnnouncements={setAnnouncements} wheelRewards={wheelRewards} setWheelRewards={setWheelRewards} promoCodes={promoCodes} setPromoCodes={setPromoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals}/>;
- if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} players={players} setPlayers={setPlayers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs} announcements={announcements} wheelRewards={wheelRewards} promoCodes={promoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals}/>;
+ if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs} announcements={announcements} setAnnouncements={setAnnouncements} wheelRewards={wheelRewards} setWheelRewards={setWheelRewards} promoCodes={promoCodes} setPromoCodes={setPromoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals} events={events} setEvents={setEvents} eventRules={eventRules} setEventRules={setEventRules} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants}/>;
+ if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} players={players} setPlayers={setPlayers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs} announcements={announcements} wheelRewards={wheelRewards} promoCodes={promoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals} events={events} setEvents={setEvents} eventRules={eventRules} setEventRules={setEventRules} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants}/>;
  return <HomePage setPage={setPage} openLogin={openLogin} announcements={announcements}/>
 }
 createRoot(document.getElementById('root')).render(<App/>);
