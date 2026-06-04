@@ -345,7 +345,7 @@ function MarketPage({setPage,openLogin,donate}) {
    <div>
     <span>YER6 DONATE MARKET</span>
     <h1>Donate Market</h1>
-    <p></p>
+    <p>YER6 Premium Mağaza</p>
    </div>
    <Card className="donateLuxuryInfo">
     <Crown size={40}/>
