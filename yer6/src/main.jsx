@@ -351,7 +351,16 @@ function MarketPage({setPage,openLogin,donate}) {
    <div>
     <span>YER6 DONATE MARKET</span>
     <h1>Donate Market</h1>
-    <p>YER6 Premium Mağaza</p>
+    <p>YER6 Premium Market'e Hoş Geldin
+
+Şehrin en özel içeriklerine, premium araçlara, özel karakter paketlerine ve benzersiz avantajlara erişmek için doğru yerdesin.
+
+Tüm satın alımlar Discord üzerinden güvenli şekilde gerçekleştirilmektedir. Satın almak istediğin ürün için Discord sunucumuzda 🎫 Donate Ticket açarak ekibimizle iletişime geçebilirsin.
+
+✔ Güvenli Teslimat
+✔ Hızlı Destek Ekibi
+✔ Özel Premium İçerikler
+✔ Sürekli Güncellenen Katalog</p>
    </div>
    <Card className="donateLuxuryInfo">
     <Crown size={40}/>
