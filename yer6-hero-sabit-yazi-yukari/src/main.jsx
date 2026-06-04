@@ -19,6 +19,7 @@ const dbAppToApp = (a) => ({ id:a.id, username:a.username, discordId:a.discord_i
 const dbPunishmentToApp = (p) => ({ id:String(p.id), targetType:p.target_type, targetId:p.target_id, targetName:p.target_name, rule:p.rule, penalty:p.penalty, proof:p.proof, note:p.note, endDate:p.end_date, status:p.status, by:p.by_admin, createdAt:p.created_at ? new Date(p.created_at).toLocaleString('tr-TR') : now() });
 const dbTicketToApp = (t) => ({ id:String(t.id), dbId:t.id, username:t.username, discordId:t.discord_id, type:t.type, title:t.title, description:t.description||'', proof:t.proof||'', state:t.state||'Açık', assigned:t.assigned||'Boşta', createdAt:t.created_at ? new Date(t.created_at).toLocaleString('tr-TR') : now(), messages:(t.ticket_messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(m=>({by:m.sender, role:m.role, text:m.message, time:m.created_at ? new Date(m.created_at).toLocaleString('tr-TR') : now()})) });
 const dbBanAppealToApp = (a) => ({ id:String(a.id), username:a.username, discordId:a.discord_id, characterName:a.character_name, eventDate:a.event_date||'', reason:a.reason||'', record:a.record||'', status:a.status||'Bekliyor', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
+const dbAnnouncementToApp = (a) => ({ id:String(a.id), title:a.title||'', content:a.content||'', by:a.by_admin||a.by||'SYSTEM', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
 
 async function addDbLog(action, detail, actor='SYSTEM'){
   try{ await supabase.from('logs').insert({actor, action, detail}); }catch(e){ console.log(e); }
@@ -311,7 +312,7 @@ function AiAssistant(){
  </div>
 }
 
-function HomePage({setPage,openLogin}) {
+function HomePage({setPage,openLogin,announcements=[]}) {
  const [slide,setSlide]=useState(0);
  
  const gallery=[
@@ -325,6 +326,17 @@ function HomePage({setPage,openLogin}) {
    <img className="heroImg active" src="/images/yer6-main-hero.png" alt="YER6 Ana Hero"/><div className="heroDark"></div>
    <div className="heroText"><span>YER6 ROLEPLAY</span><h1>Bir Şehrin<br/><em>Yeni Hikayesi Başlıyor!</em></h1><p>Gerçekçi rol ortamı, aktif sistemler ve profesyonel yönetim kadrosuyla benzersiz bir deneyime katıl.</p><div className="heroButtons"><Button onClick={()=>openLogin('register')}><UserPlus size={18}/> Hemen Katıl</Button><Button variant="ghost" onClick={()=>window.open('https://discord.gg/ysewESgQm','_blank')}>Discord'da Katıl</Button></div></div>
    <Card className="status"><div><b>Sunucu Durumu</b><span>Çevrimiçi</span></div><p>IP Adresi <b>connect.yer6rp.com</b></p><p>Oyuncular <b>182 / 500</b></p><p>Ping <b>21ms</b></p><Button className="full" onClick={()=>window.location.href='fivem://connect/185.34.101.48:30120'}>Sunucuya Katıl</Button></Card>
+  </section>
+  <section className="homeAnnouncements">
+   <Card className="panel announcementBox">
+    <h2><Bell size={18}/> Son Duyurular</h2>
+    {(!announcements||announcements.length===0)&&<p>Henüz duyuru yok.</p>}
+    {(announcements||[]).slice(0,5).map(a=><div className="announcementItem" key={a.id}>
+     <h3>{a.title}</h3>
+     <p>{a.content}</p>
+     <small>{a.createdAt} {a.by?('• '+a.by):''}</small>
+    </div>)}
+   </Card>
   </section>
   <section className="galleryRow">{gallery.map((g,i)=><Card className="photoCard" key={i}><img src={`/images/${g.img}`} alt={g.title}/><h2>{g.title}</h2></Card>)}</section>
   <AiAssistant/>
@@ -654,8 +666,24 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  async function closeTicket(id){const t=tickets.find(x=>String(x.id)===String(id));await supabase.from('tickets').update({state:'Kapalı'}).eq('id',t?.dbId||id);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,state:'Kapalı'}:x));await addDbLog('TICKET_CLOSE', `${id} kapatıldı.`, admin.username);}
  async function assignTicket(id){const t=tickets.find(x=>String(x.id)===String(id));await supabase.from('tickets').update({state:'İncelemede',assigned:admin.username}).eq('id',t?.dbId||id);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,state:'İncelemede',assigned:admin.username}:x));await addDbLog('TICKET_ASSIGN', `${id} üstlenildi.`, admin.username);}
  async function addAdminTicketReply(id){if(!staffReply.trim())return alert('Mesaj yazmalısın.');const t=tickets.find(x=>String(x.id)===String(id));const {error}=await supabase.from('ticket_messages').insert({ticket_id:t?.dbId||id,sender:admin.username,role:'Yetkili',message:staffReply});if(error)return alert('Mesaj hatası: '+error.message);setTickets(p=>p.map(x=>String(x.id)===String(id)?{...x,messages:[...(x.messages||[]),{by:admin.username,role:'Yetkili',text:staffReply,time:now()}],state:x.state==='Açık'?'İncelemede':x.state,assigned:x.assigned==='Boşta'?admin.username:x.assigned}:x));await addDbLog('TICKET_MESSAGE', `${id} yetkili mesajı`, admin.username);setStaffReply('');}
- async function addAnnouncement(){if(!announcement.title.trim()||!announcement.content.trim())return alert('Duyuru başlığı ve içeriği gerekli.');const item={id:Date.now(),title:announcement.title.trim(),content:announcement.content.trim(),createdAt:now(),by:admin.username};setAnnouncements(p=>[item,...p]);setLogs(p=>[now()+' - duyuru eklendi: '+item.title,...p]);await addDbLog('ANNOUNCEMENT_CREATE', `${item.title} duyurusu eklendi.`, admin.username);setAnnouncement({title:'',content:''});}
- function deleteAnnouncement(id){setAnnouncements(p=>p.filter(a=>String(a.id)!==String(id)));}
+ async function addAnnouncement(){
+ if(!announcement.title.trim()||!announcement.content.trim())return alert('Duyuru başlığı ve içeriği gerekli.');
+ const payload={title:announcement.title.trim(),content:announcement.content.trim(),by_admin:admin.username};
+ const {data,error}=await supabase.from('announcements').insert(payload).select().single();
+ const item=data?dbAnnouncementToApp(data):{id:String(Date.now()),title:payload.title,content:payload.content,createdAt:now(),by:admin.username};
+ if(error) console.log('Duyuru Supabase kayıt hatası:', error.message);
+ setAnnouncements(p=>[item,...(p||[])]);
+ setLogs(p=>[now()+' - duyuru eklendi: '+item.title,...p]);
+ await addDbLog('ANNOUNCEMENT_CREATE', `${item.title} duyurusu eklendi. Ana sayfa ve oyuncu panelinde yayınlandı.`, admin.username);
+ setAnnouncement({title:'',content:''});
+}
+ async function deleteAnnouncement(id){
+ const item=(announcements||[]).find(a=>String(a.id)===String(id));
+ await supabase.from('announcements').delete().eq('id',id);
+ setAnnouncements(p=>(p||[]).filter(a=>String(a.id)!==String(id)));
+ setLogs(p=>[now()+' - duyuru silindi: '+(item?.title||id),...p]);
+ await addDbLog('ANNOUNCEMENT_DELETE', `${item?.title||id} duyurusu silindi.`, admin.username);
+}
  async function appResult(i,result){const a=apps[i];if(a?.id)await supabase.from('applications').update({status:result}).eq('id',a.id);setApps(p=>p.map((x,idx)=>idx===i?{...x,status:result}:x));await addDbLog('APPLICATION_RESULT', `${a?.username||'Oyuncu'} ${result}`, admin.username);}
  async function banAppealResult(id,result){const item=(banAppeals||[]).find(x=>String(x.id)===String(id));if(item?.id && !String(item.id).startsWith('local')) await supabase.from('ban_appeals').update({status:result}).eq('id',item.id);setBanAppeals(p=>(p||[]).map(x=>String(x.id)===String(id)?{...x,status:result}:x));await addDbLog('BAN_APPEAL_RESULT', `${item?.username||'Oyuncu'} ban itirazı ${result}`, admin.username);}
  async function addPunishment(){
@@ -978,7 +1006,7 @@ function App(){
 
  async function loadSupabaseData(){
   try{
-    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,logsRes]=await Promise.all([
+    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes]=await Promise.all([
       supabase.from('admins').select('*').order('level',{ascending:false}),
       supabase.from('players').select('*').order('created_at',{ascending:false}),
       supabase.from('staff_ranks').select('*').order('level',{ascending:true}),
@@ -988,6 +1016,7 @@ function App(){
       supabase.from('ban_appeals').select('*').order('created_at',{ascending:false}),
       supabase.from('punishments').select('*').order('created_at',{ascending:false}),
       supabase.from('donate_categories').select('*').order('id',{ascending:true}),
+      supabase.from('announcements').select('*').order('created_at',{ascending:false}),
       supabase.from('logs').select('*').order('created_at',{ascending:false}).limit(250)
     ]);
     if(!adminsRes.error && adminsRes.data?.length) setAdmins(adminsRes.data.map(dbAdminToApp));
@@ -999,6 +1028,7 @@ function App(){
     if(!banAppealsRes.error) setBanAppeals((banAppealsRes.data||[]).map(dbBanAppealToApp));
     if(!punishRes.error) setPunishments((punishRes.data||[]).map(dbPunishmentToApp));
     if(!donateRes.error) setDonate((donateRes.data||[]).map(dbDonateToApp));
+    if(!announcementsRes.error) setAnnouncements((announcementsRes.data||[]).map(dbAnnouncementToApp));
     if(!logsRes.error) setLogs((logsRes.data||[]).map(l=>`${l.created_at ? new Date(l.created_at).toLocaleString('tr-TR') : ''} - ${l.actor||'SYSTEM'} - ${l.action}: ${l.detail||''}`));
   }catch(e){ console.log('Supabase veri çekme hatası', e); }
  }
@@ -1074,7 +1104,7 @@ function App(){
   }catch(err){ alert('Kayıt hatası: '+err.message); }
  }
 
-if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
+if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin} announcements={announcements}/>;
  if(page==='rules')return <RulesPage setPage={setPage} openLogin={openLogin}/>;
  if(page==='staff')return <StaffPage setPage={setPage} openLogin={openLogin} staffMembers={staffMembers}/>;
  if(page==='characters')return <CharactersPage setPage={setPage} openLogin={openLogin}/>;
@@ -1083,6 +1113,6 @@ if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin}/>;
  if(page==='login') return <LoginPage setPage={setPage} mode={loginMode} setMode={setLoginMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
  if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs} announcements={announcements} setAnnouncements={setAnnouncements}/>;
  if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs} announcements={announcements}/>;
- return <HomePage setPage={setPage} openLogin={openLogin}/>
+ return <HomePage setPage={setPage} openLogin={openLogin} announcements={announcements}/>
 }
 createRoot(document.getElementById('root')).render(<App/>);
