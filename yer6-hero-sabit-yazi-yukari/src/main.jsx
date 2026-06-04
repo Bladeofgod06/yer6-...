@@ -23,9 +23,24 @@ const dbAnnouncementToApp = (a) => ({ id:String(a.id), title:a.title||'', conten
 
 async function addDbLog(action, detail, actor='SYSTEM'){
   try{
-    const { error } = await supabase.from('logs').insert({actor, action, detail});
-    if(error) console.log('Log kayıt hatası:', error.message);
-  }catch(e){ console.log('Log kayıt hatası:', e); }
+    const payload = {
+      actor: String(actor || 'SYSTEM'),
+      action: String(action || 'UNKNOWN'),
+      detail: String(detail || '')
+    };
+
+    const { error } = await supabase.from('logs').insert(payload);
+
+    if(error){
+      console.error('LOG HATASI:', error.message, payload);
+      return false;
+    }
+
+    return true;
+  }catch(e){
+    console.error('LOG HATASI:', e);
+    return false;
+  }
 }
 
 const rules = [["Ailevi Değerlere Küfür (ADK)", "3 Gün WL", "Ağır", "Saygı"], ["Aktif Rolde Desteğe Çıkmak", "4x Uyarı", "Orta", "Destek"], ["Aile Kıyafet Kurallarına Uymamak / Claimsiz Gezmek", "3x Uyarı", "Orta", "Aile"], ["Başka Ailenin Claimini Kullanmak", "1 Gün WL", "Ağır", "Aile"], ["Badcop (BC)", "2 Gün WL + İhraç + CK", "Ağır", "Devlet"], ["Bug Abuse", "3 Gün WL", "Ağır", "Abuse"], ["Pit Demirsiz Araçla Pit Atmak", "4x Uyarı", "Orta", "Araç"], ["Polisin 5 Dakika Dolmadan Pit Atması", "3x Uyarı", "Orta", "Polis"], ["Polis Bayıltma / Öldürme Durumlarında Pit Kuralı Geçersizdir", "Bilgilendirme", "Not", "Polis"], ["Polis Kıyafeti Giymek (Sivil)", "3 Gün WL", "Ağır", "Devlet"], ["Power Gaming", "1 Gün WL", "Ağır", "RP"], ["Polis Soymak / Teçhizatlarını Almak / Legal Itemleri Almak veya Kullanmak", "4x Uyarı", "Orta", "Devlet"], ["RDM", "1 Gün WL", "Ağır", "Combat"], ["Refuse RP", "1 Gün WL", "Ağır", "RP"], ["Retarded RP", "3x Uyarı", "Orta", "RP"], ["Revenge Kill", "1 Gün WL", "Ağır", "Combat"], ["Rol Baltalama", "1 Gün WL", "Ağır", "RP"], ["Rol Block Uymamak", "1 Gün WL", "Ağır", "RP"], ["Rol Check", "1 Gün WL", "Ağır", "RP"], ["Rol Clear'ı Hatırlamak", "1 Gün WL", "Ağır", "RP"], ["Rolde OOC Konuşmak", "4x Uyarı", "Orta", "OOC"], ["Sincap, 3 Bacaklı, Travesti vb. saçma hitaplarla rol baltalamak", "5 Gün WL", "Ağır", "Saygı"], ["Sarı Sayfalarda 30 Dakika Geçmeden İlan Atmak", "1x Uyarı", "Hafif", "Sarı Sayfa"], ["Sağlık Çalışanına Fiziksel Şiddet / Rehin Almak", "4x Uyarı", "Orta", "EMS"], ["SS Dışında Adam Soymak", "4x Uyarı", "Orta", "Soygun"], ["Soygunda Polis Gelmeden Gitmek (ATM/Ev Hariç)", "4x Uyarı", "Orta", "Soygun"], ["Sunucuya Küfür", "PERMA", "Perma", "Saygı"], ["Tehdit / Şantaj / Data Sorgusu / Sanal Mafyacılık / Panel Muhabbetleri", "PERMA", "Perma", "Saygı"], ["Triggerlamak", "1 Gün WL", "Ağır", "RP"], ["Üniformalı Polisi 30+ Dakika Esir Tutmak", "3x Uyarı", "Orta", "Devlet"], ["VDM", "1 Gün WL", "Ağır", "Combat"], ["Araçtaki silahsız ve zor durumdaki kişi 1 kez araçla çarpıp kaçabilir", "VDM Sayılmaz", "Not", "Combat"], ["Yanlış /ME ve /DO Kullanımı", "3x Uyarı", "Orta", "Komut"], ["Yayıncıları Ghostlamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yayıncının Yayınını Baltalamak", "1 Gün WL", "Ağır", "Yayıncı"], ["Yetkiliyi Kandırmak", "2 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Ağır Hakaret", "4 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye Hakaret", "1 Gün WL", "Ağır", "Yetkili"], ["Yetkiliye “Melek” vb. Demek", "4x Uyarı", "Orta", "Yetkili"], ["WL Cezası Varken Oyuna Girmek / Quit Atıp Geri Sunucuya Girmek", "1 Gün WL", "Ağır", "WL"], ["Uyarılar 2 Haftada 1 Silinmektedir", "Not", "Not", "Notlar"], ["5x Uyarı 1 Gün WL'ye Dönüşür", "Not", "Not", "Notlar"], ["Kaliteli rol deneyimi için kurallar sıkı hale getirilmiştir", "İyi Roller", "Not", "Notlar"], ["Combatlog", "2 Gün WL + Envanter SİLİNECEK", "Ağır", "Combat"], ["Combatlog Timeout / Crash Durumu", "Kayıtlı kanıtlı şekilde destekte sunulmalıdır", "Not", "Combat"], ["Crash-bildirip geri role giremeyecek durumlar kanıtlı sunulmalıdır", "Not", "Not", "Combat"], ["Copbait (Normal)", "3x Uyarı", "Orta", "Polis"], ["Copbait (Rol Baltalama)", "2 Gün WL", "Ağır", "Polis"], ["Destekte Yetkiliye Saygısızlık/Küfür", "1 Gün WL", "Ağır", "Destek"], ["Destekte Karşı Tarafa Saygısızlık", "3x Uyarı", "Orta", "Destek"], ["Dini Değerlere Küfür (DDK)", "PERMA", "Perma", "Saygı"], ["Donate Araç/Motor ile Soygun Yapmak", "2x Uyarı", "Orta", "Donate"], ["Dolandırıcılık Rolü", "4x Uyarı", "Orta", "Rol"], ["Dupe (Eşya / Silah Çoğaltma)", "PERMA", "Perma", "Abuse"], ["Etkinlik Baltalamak", "4x Uyarı + Kick + Devamında 1 Gün WL", "Ağır", "Etkinlik"], ["Fail RP", "4x Uyarı", "Orta", "RP"], ["Fear RP", "4x Uyarı", "Orta", "RP"], ["Force RP", "4x Uyarı", "Orta", "RP"], ["Gang Up", "1 Gün WL", "Ağır", "İllegal"], ["Gang Up Açıklaması", "Ailelerde illegal kurallara bakılır. Sivilde en fazla 5 kişi birlikte rol yapabilir.", "Not", "İllegal"], ["6. kişi girdiğinde kişisel Gang Up işlemi uygulanır", "Not", "Not", "İllegal"], ["Gereksiz Agresif Başlatmak / Devam Ettirmek", "4x Uyarı", "Orta", "Agresif"], ["Güvenli Bölgede Adam Kaçırmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölge dışındaki rolü güvenli bölgede devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli bölgede küfürleşmek, sövüşmek, agresifi devam ettirmek", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Güvenli Bölgeye Dışarıdan Ateş Etmek", "1 Gün WL", "Ağır", "Güvenli Bölge"], ["Güvenli Bölgede Agresif Rol Başlatmak", "4x Uyarı", "Orta", "Güvenli Bölge"], ["Hile / 3. Parti Yazılım Kullanımı", "PERMA", "Perma", "Hile"], ["IC/OOC Mixing", "1 Gün WL", "Ağır", "OOC"], ["IC/OOC Mixing Açıklaması", "Discord kanalları veya IC olarak sunucu içinde yapılan OOC konuşmalar işlem sebebidir", "Not", "OOC"], ["ILLEGAL RPF 1. Tespit", "Sözlü Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 2. Tespit", "1x İllegal Uyarı + 3x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 3. Tespit", "2x İllegal Uyarı + 4x Uyarı", "İllegal RPF", "İllegal RPF"], ["ILLEGAL RPF 4. Tespit", "PERMA BAN", "İllegal RPF", "İllegal RPF"], ["İllegal/Legal Yasağı Kuralını Çiğnemek", "1 Gün WL", "Ağır", "İllegal"], ["İzinsiz “E” Çekmek", "3x Uyarı", "Orta", "İllegal"], ["İzinsiz ERP", "1 Gün WL", "Ağır", "Rol"], ["İzinsiz Soygun (Banka / Kuyumcu)", "1 Gün WL", "Ağır", "Soygun"], ["Kadın Oyuncuya Cinsel Hakaret", "2 Gün WL", "Ağır", "Saygı"], ["Kadın Oyuncuya Taciz", "PERMA", "Perma", "Saygı"], ["Kamu Alanında Triggerlamak", "3x Uyarı", "Orta", "RP"], ["Kaza Rolüne Girmemek", "3x Uyarı", "Orta", "Araç"], ["Kenevir/Meth Bölgesine Siren Açıp Girmek", "4x Uyarı", "Orta", "İllegal"], ["Low RP", "2 Gün WL", "Ağır", "RP"], ["Maskesiz Soygun", "2x Uyarı", "Orta", "Soygun"], ["Meta Gaming", "2 Gün WL", "Ağır", "RP"], ["Milli Değerlere Küfür (MDK)", "PERMA", "Perma", "Saygı"], ["NLR (New Life Rule)", "1 Gün WL", "Ağır", "RP"], ["NLR Açıklaması", "CK yedikten sonra önceki hayatını hatırlamak yasaktır", "Not", "RP"], ["Non-RP Driving", "4x Uyarı", "Orta", "Araç"], ["OOC Kin", "4x Uyarı", "Orta", "OOC"], ["Devlet Araçlarını Çalmak", "3x Uyarı", "Orta", "Devlet"], ["Devlet Araçları Açıklaması", "Polis, Ambulans ve Adalet Bakanlığı araçlarını çalmak yasaktır", "Not", "Devlet"]].map(([name, penalty, level, category], id) => ({ id: id + 1, name, penalty, level, category }));
@@ -624,7 +639,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
    <Logo/>
    <p>{player.username}</p>
    {menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}
-   <Button variant="ghost" onClick={()=>{addDbLog('PLAYER_LOGOUT', `${player.username} oyuncu panelinden çıkış yaptı.`, player.username);localStorage.removeItem('yer6_player_session');setPlayer(null);setPage('home')}}>Çıkış</Button>
+   <Button variant="ghost" onClick={async()=>{await addDbLog('PLAYER_LOGOUT', `${player.username} oyuncu panelinden çıkış yaptı.`, player.username);localStorage.removeItem('yer6_player_session');setPlayer(null);setPage('home')}}>Çıkış</Button>
   </aside>
   <main>
    <Title k="OYUNCU PANELİ" t={'Hoş geldin, '+player.username} p="Destek açabilir, yetkili başvurusu gönderebilir ve yetkililerle destek üzerinden konuşabilirsin."/>
@@ -793,7 +808,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
 
- return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={()=>{addDbLog('ADMIN_LOGOUT', `${admin.username} admin panelinden çıkış yaptı.`, admin.username);localStorage.removeItem('yer6_admin_session');setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
+ return <div className="adminLayout"><aside><Logo/><p>{admin.username} • LVL {admin.level} • {admin.role}</p>{menu.map(m=><button key={m} className={active===m?'active':''} onClick={()=>setActive(m)}>{m}</button>)}<Button variant="ghost" onClick={async()=>{await addDbLog('ADMIN_LOGOUT', `${admin.username} admin panelinden çıkış yaptı.`, admin.username);localStorage.removeItem('yer6_admin_session');setAdmin(null);setPage('home')}}>Çıkış</Button></aside><main><div className="adminTop"><div><h1>{active}</h1><p>Full yönetim paneli</p></div><Button onClick={()=>setLogs(p=>[now()+' - Bildirim kontrol edildi',...p])}><Bell size={16}/> Bildirim</Button></div>
   {active==='Dashboard'&&<div className="grid4"><Card className="stat"><Users/><div><span>Oyuncu</span><b>{players.length}</b></div></Card><Card className="stat"><ShieldCheck/><div><span>Yetkili</span><b>{admins.length}</b></div></Card><Card className="stat"><Ban/><div><span>Aktif Ceza</span><b>{activePunishments.length}</b></div></Card><Card className="stat"><Ticket/><div><span>Destek</span><b>{tickets.length}</b></div></Card></div>}
   {active==='Oyuncular'&&<Card className="panel"><h2>Oyuncular</h2>{players.length===0&&<p>Oyuncu yok.</p>}{players.map(p=><div className="row" key={p.discordId}><div><b>{p.username}</b><p>{p.discordId} • {p.wlStatus||'Aktif'}</p><small>{p.banReason||'Ceza yok'} {p.wlEndDate?('• Bitiş: '+(p.wlEndDate==='PERMA'?'PERMA':new Date(p.wlEndDate).toLocaleString('tr-TR'))):''}</small></div><Badge tone={p.wlStatus&&p.wlStatus!=='Aktif'?'bad':'good'}>{p.wlStatus||'Aktif'}</Badge></div>)}</Card>}
   {active==='Yetkililer'&&<Card className="panel"><h2>Yetkili Yönetimi</h2><div className="grid4"><Field value={newAdmin.username} onChange={v=>setNewAdmin({...newAdmin,username:v})} placeholder="Ad"/><Field value={newAdmin.discordId} onChange={v=>setNewAdmin({...newAdmin,discordId:v})} placeholder="Discord ID"/><Field value={newAdmin.password} onChange={v=>setNewAdmin({...newAdmin,password:v})} placeholder="Şifre"/><select className="field" value={newAdmin.role} onChange={e=>setNewAdmin({...newAdmin,role:e.target.value})}>{staffRanks.map(r=><option key={r.rank} value={r.rank}>LVL {r.level} - {r.rank}</option>)}</select></div><Button onClick={addAdmin}>Yetkili Ekle</Button>{[...admins].sort((a,b)=>getStaffLevel(b.role)-getStaffLevel(a.role)).map(a=><div className="row" key={a.discordId}><div><b>{a.username}</b><p>LVL {a.level} • {a.role} • {a.discordId}</p><small>Şifre gizli</small></div><div className="actions staffActions"><Badge>{a.role}</Badge>{canFounderManage(admin)&&<><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'down')}>Düşür</button><button type="button" className="btn ghost smallBtn" onClick={()=>changeAdminRankOnlyFounder(a.discordId,'up')}>Yükselt</button><button type="button" className="btn ghost smallBtn dangerBtn" onClick={()=>removeAdminOnlyFounder(a.discordId)}>Kaldır</button></>}</div></div>)}</Card>}
@@ -1013,6 +1028,20 @@ function App(){
 
  useEffect(()=>{ loadSupabaseData(); },[]);
 
+ useEffect(()=>{
+  if(admin?.username && !sessionStorage.getItem('yer6_admin_session_logged')){
+   sessionStorage.setItem('yer6_admin_session_logged','1');
+   addDbLog('ADMIN_SESSION_ACTIVE', `${admin.username} kayıtlı oturumla admin paneline girdi.`, admin.username);
+  }
+ },[admin]);
+
+ useEffect(()=>{
+  if(player?.username && !sessionStorage.getItem('yer6_player_session_logged')){
+   sessionStorage.setItem('yer6_player_session_logged','1');
+   addDbLog('PLAYER_SESSION_ACTIVE', `${player.username} kayıtlı oturumla oyuncu paneline girdi.`, player.username);
+  }
+ },[player]);
+
  async function loadSupabaseData(){
   try{
     const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes]=await Promise.all([
@@ -1075,10 +1104,10 @@ function App(){
    let adminData = (!error && data) ? dbAdminToApp(data) : null;
    if(!adminData) adminData = starterAdmins.find(a=>String(a.discordId)===String(auth.discordId)&&String(a.password)===String(auth.password));
    if(!adminData) return alert('Admin bilgileri yanlış.');
+   await addDbLog('ADMIN_LOGIN', `${adminData.username} admin paneline giriş yaptı.`, adminData.username);
    setAdmin(adminData);
    localStorage.setItem('yer6_admin_session', JSON.stringify(adminData));
    setPage('admin');
-   await addDbLog('ADMIN_LOGIN', `${adminData.username} giriş yaptı.`, adminData.username);
   }catch(err){ alert('Admin giriş hatası: '+err.message); }
  }
 
@@ -1088,10 +1117,10 @@ function App(){
    const { data, error } = await supabase.from('players').select('*').eq('discord_id',auth.discordId).eq('password',auth.password).single();
    if(error || !data) return alert('Oyuncu bilgileri yanlış.');
    const playerData = dbPlayerToApp(data);
+   await addDbLog('PLAYER_LOGIN', `${playerData.username} oyuncu paneline giriş yaptı.`, playerData.username);
    setPlayer(playerData);
    localStorage.setItem('yer6_player_session', JSON.stringify(playerData));
    setPage('player');
-   await addDbLog('PLAYER_LOGIN', `${playerData.username} oyuncu paneline giriş yaptı.`, playerData.username);
   }catch(err){ alert('Oyuncu giriş hatası: '+err.message); }
  }
 
@@ -1103,11 +1132,11 @@ function App(){
    }).select().single();
    if(error) return alert('Kayıt hatası: '+error.message);
    const playerData = dbPlayerToApp(data);
+   await addDbLog('PLAYER_REGISTER', `${playerData.username} kayıt oldu ve oyuncu paneline giriş yaptı.`, playerData.username);
    setPlayers(prev=>[playerData,...prev]);
    setPlayer(playerData);
    localStorage.setItem('yer6_player_session', JSON.stringify(playerData));
    setPage('player');
-   await addDbLog('PLAYER_REGISTER', `${playerData.username} kayıt oldu.`, playerData.username);
   }catch(err){ alert('Kayıt hatası: '+err.message); }
  }
 
