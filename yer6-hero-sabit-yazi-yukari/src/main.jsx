@@ -198,13 +198,22 @@ function durationForCommand(penalty) {
   return 'süre-yok';
 }
 function wlGiveCommand(p) {
-  return `/wl-ceza ver kullanıcı:${p.targetId} süre:${durationForCommand(p.penalty)} sebep:${p.rule}`;
+  return `/rol-al kisiler:${p.targetId} rol:@Whitelisted`;
+}
+function wlBanCommand(p) {
+  return `/rol-ver kisiler:${p.targetId} rol:@Süreli Uzaklaştırma`;
+}
+function wlFinishRemoveBanCommand(p) {
+  return `/rol-al kisiler:${p.targetId} rol:@Süreli Uzaklaştırma`;
+}
+function wlFinishGiveWlCommand(p) {
+  return `/rol-ver kisiler:${p.targetId} rol:@Whitelisted`;
 }
 function wlRemoveCommand(p) {
-  return `/wl-ceza kaldır kullanıcı:${p.targetId} sebep:Ceza kaldırıldı`;
+  return wlFinishRemoveBanCommand(p);
 }
 function roleGiveCommand(p) {
-  return `/wl-ceza rol kullanıcı:${p.targetId}`;
+  return wlFinishGiveWlCommand(p);
 }
 function makeEndDate(penalty) {
   const d = penaltyDays(penalty);
@@ -366,7 +375,7 @@ function MarketPage({setPage,openLogin,donate}) {
   <section className="donateLuxuryGrid">
    {market.map((d,i)=>{
     const cover=d.cover || d.photos?.[0]?.url;
-    return <Card className="donateLuxuryCard" key={d.type+i}>
+    return <Card className="donateLuxuryCard" key={(d.id||d.type)+i}>
      <div className="donateLuxuryImg">
       {cover ? <img src={cover} alt={d.type}/> : <ShoppingCart size={38}/>}
      </div>
@@ -604,23 +613,23 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   <Button variant="ghost" onClick={()=>copyText(`/wl-ceza ver kullanıcı:${punish.targetId} süre:${durationForCommand(punish.penalty)} sebep:${punish.rule}`)}>Komutu Kopyala</Button>
 </div></Card>}
   {active==='WL Takip'&&<Card className="panel"><h2>WL / Ceza Takip</h2>{activePunishments.length===0&&<p>Aktif ceza yok.</p>}{activePunishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty}</p><small>WL Bitiş: {p.endDate==='PERMA'?'PERMA':p.endDate?new Date(p.endDate).toLocaleString('tr-TR'):'Yok'} • {daysLeft(p.endDate)}</small></div><div className="actions">
-  <Button variant="ghost" onClick={()=>copyText(wlRemoveCommand(p))}>WL Kaldır Komutunu Kopyala</Button>
+  <Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>WL Kaldır Komutunu Kopyala</Button>
   <Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>WL Ver Komutunu Kopyala</Button>
   <Button onClick={()=>finishPunishment(p.id)}><CheckCircle size={16}/> WL Geri Ver / Bitir</Button>
 </div></div>)}</Card>}
-  {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>Ver Komutu</Button><Button variant="ghost" onClick={()=>copyText(wlRemoveCommand(p))}>Kaldır Komutu</Button></div></div>)}</Card>}
+  {active==='Ceza Kayıtları'&&<Card className="panel"><h2>Ceza Kayıtları</h2>{punishments.length===0&&<p>Ceza kaydı yok.</p>}{punishments.map(p=><div className="row" key={p.id}><div><b>{p.id} • {p.targetType} • {p.targetId}</b><p>{p.rule} • {p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small><div className="miniCommand">{wlGiveCommand(p)}</div></div><div className="actions"><Button variant="ghost" onClick={()=>copyText(wlGiveCommand(p))}>Ver Komutu</Button><Button variant="ghost" onClick={()=>copyText(wlFinishRemoveBanCommand(p)+'\n'+wlFinishGiveWlCommand(p))}>Kaldır Komutu</Button></div></div>)}</Card>}
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
   {active==='Donate Market'&&<div className="panelStack">
   <Card className="panel">
    <h2>Donate Market Fotoğraf Yönetimi</h2>
-   <p className="muted">Kategori oluştur, kategoriye fotoğraf ekle/çıkar. Ürünleri görüntüle panelinde sadece buraya eklediğin fotoğraflar görünür.</p>
-   <Button onClick={()=>setEditDonate({type:'Yeni Donate Kategorisi',desc:'Bu kategorideki özel donate ürünleri.',cover:'',items:[],images:['','','',''],photos:[]})}>Yeni Kategori Oluştur</Button>
+   <p className="muted">Kategori oluştur, düzenle, sil. Ürünleri görüntüle panelinde sadece buraya eklediğin fotoğraflar görünür.</p>
+   <Button onClick={()=>setEditDonate({type:'Yeni Donate Kategorisi',desc:'Bu kategorideki özel donate ürünleri.',cover:'',items:[],images:[],photos:[]})}>Yeni Kategori Oluştur</Button>
   </Card>
 
   <div className="donateAdminGrid">
    {donate.map((d,idx)=>{
     const cat=normalizeDonateCategory(d);
-    return <Card className="donateAdminCard" key={cat.type+idx}>
+    return <Card className="donateAdminCard" key={(cat.id||cat.type)+idx}>
      <div className="donateAdminCover">{cat.cover?<img src={cat.cover} alt={cat.type}/>:<ShoppingCart size={34}/>}</div>
      <div className="donateAdminBody">
       <small>DONATE KATEGORİ</small>
@@ -631,8 +640,11 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
        <Button onClick={()=>setEditDonate(cat)}>Düzenle</Button>
        <Button variant="ghost" onClick={async()=>{
         if(!confirm(cat.type+' kategorisi silinsin mi?')) return;
-        if(cat.id) await supabase.from('donate_categories').delete().eq('id',cat.id);
-        setDonate(prev=>prev.filter((_,i)=>i!==idx));
+        if(cat.id){
+          const { error } = await supabase.from('donate_categories').delete().eq('id',cat.id);
+          if(error) return alert('Silme hatası: '+error.message);
+        }
+        setDonate(prev=>prev.filter((x,i)=> i!==idx && String(x.id||x.type)!==String(cat.id||cat.type)));
         await addDbLog('DONATE_DELETE', `${cat.type} silindi.`, admin.username);
        }}>Sil</Button>
       </div>
