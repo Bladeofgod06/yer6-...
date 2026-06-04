@@ -337,6 +337,7 @@ function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <
 
 function MarketPage({setPage,openLogin,donate}) {
  const [selected,setSelected]=useState(null);
+ const [photoViewer,setPhotoViewer]=useState(null);
  const market=(Array.isArray(donate)?donate:[]).map(normalizeDonateCategory);
 
  return <div className="inner donateLuxuryPage"><Header setPage={setPage} openLogin={openLogin}/><main>
@@ -384,16 +385,33 @@ function MarketPage({setPage,openLogin,donate}) {
      <button className="donateClose" onClick={()=>setSelected(null)}>×</button>
     </div>
 
-    <div className="donatePhotoGrid">
-     {(selected.photos||[]).map((p,i)=><div className="donateOnlyPhoto" key={(p.url||'foto')+i}>
+    <div className="donatePhotoGrid compactGallery">
+     {(selected.photos||[]).map((p,i)=><button type="button" className="donateOnlyPhoto photoThumbCard" key={(p.url||'foto')+i} onClick={()=>setPhotoViewer({photo:p,index:i,total:(selected.photos||[]).length,category:selected.type})}>
       <img src={p.url} alt={p.title||selected.type}/>
-      {p.title&&<span>{p.title}</span>}
-     </div>)}
+      <span>{p.title||('Fotoğraf '+(i+1))}</span>
+      <em>Görüntüle</em>
+     </button>)}
      {(!selected.photos||selected.photos.length===0)&&<Card className="donateNoPhoto">
       <ShoppingCart size={38}/>
       <h3>Fotoğraf eklenmedi</h3>
       <p>Admin panelden bu kategoriye fotoğraf ekleyince burada görünecek.</p>
      </Card>}
+    </div>
+   </Card>
+  </div>}
+
+  {photoViewer&&<div className="singlePhotoOverlay">
+   <Card className="singlePhotoPanel">
+    <div className="singlePhotoHead">
+     <div>
+      <span>{photoViewer.category}</span>
+      <h2>{photoViewer.photo.title||('Fotoğraf '+(photoViewer.index+1))}</h2>
+      <p>{photoViewer.index+1} / {photoViewer.total}</p>
+     </div>
+     <button className="donateClose" onClick={()=>setPhotoViewer(null)}>×</button>
+    </div>
+    <div className="singlePhotoFrame">
+     <img src={photoViewer.photo.url} alt={photoViewer.photo.title||photoViewer.category}/>
     </div>
    </Card>
   </div>}
