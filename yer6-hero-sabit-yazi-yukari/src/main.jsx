@@ -11,7 +11,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-const dbPlayerToApp = (p) => ({ username:p.username, discordId:p.discord_id, password:p.password, steam:p.steam||'', wlStatus:p.wl_status||'Aktif', wlEndDate:p.wl_end_date||'', banReason:p.ban_reason||'' });
+const dbPlayerToApp = (p) => ({ username:p.username, discordId:p.discord_id, password:p.password, steam:p.steam||'', gameId:p.game_id||p.gameId||'', wlStatus:p.wl_status||'Aktif', wlEndDate:p.wl_end_date||'', banReason:p.ban_reason||'' });
 const dbAdminToApp = (a) => ({ username:a.username, discordId:a.discord_id, password:a.password, role:a.role, level:a.level });
 const dbStaffToApp = (s) => ({ name:s.name, discordId:s.discord_id, rank:s.rank, level:s.level, duty:s.duty||'', status:s.status||'Aktif', image:s.image||'' });
 const dbDonateToApp = (d) => ({ id:d.id, type:d.type, items:d.items||[], images:d.images||['','','',''], photos:d.photos||[], products:d.products||[], cover:d.cover||'', desc:d.desc||'' });
@@ -20,6 +20,32 @@ const dbPunishmentToApp = (p) => ({ id:String(p.id), targetType:p.target_type, t
 const dbTicketToApp = (t) => ({ id:String(t.id), dbId:t.id, username:t.username, discordId:t.discord_id, type:t.type, title:t.title, description:t.description||'', proof:t.proof||'', state:t.state||'Açık', assigned:t.assigned||'Boşta', createdAt:t.created_at ? new Date(t.created_at).toLocaleString('tr-TR') : now(), messages:(t.ticket_messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(m=>({by:m.sender, role:m.role, text:m.message, time:m.created_at ? new Date(m.created_at).toLocaleString('tr-TR') : now()})) });
 const dbBanAppealToApp = (a) => ({ id:String(a.id), username:a.username, discordId:a.discord_id, characterName:a.character_name, eventDate:a.event_date||'', reason:a.reason||'', record:a.record||'', status:a.status||'Bekliyor', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
 const dbAnnouncementToApp = (a) => ({ id:String(a.id), title:a.title||'', content:a.content||'', by:a.by_admin||a.by||'SYSTEM', createdAt:a.created_at ? new Date(a.created_at).toLocaleString('tr-TR') : now() });
+
+const defaultWheelRewards = [
+ {id:'wr-1',title:'50.000 IC Para',kind:'ic_money',amount:50000,chance:35,color:'#e61127',active:true},
+ {id:'wr-2',title:'100.000 IC Para',kind:'ic_money',amount:100000,chance:25,color:'#8b000b',active:true},
+ {id:'wr-3',title:'250.000 IC Para',kind:'ic_money',amount:250000,chance:12,color:'#ff1f31',active:true},
+ {id:'wr-4',title:'Boş',kind:'empty',amount:0,chance:18,color:'#1f2937',active:true},
+ {id:'wr-5',title:'VIP 1 Gün',kind:'manual',amount:0,chance:7,color:'#d97706',active:true},
+ {id:'wr-6',title:'Özel Araç Kuponu',kind:'manual',amount:0,chance:3,color:'#7c3aed',active:true}
+];
+const defaultPromoCodes = [
+ {id:'pc-1',code:'YER6ACILIS',title:'100.000 IC Para',kind:'ic_money',amount:100000,maxUses:100,usedBy:[],active:true},
+ {id:'pc-2',code:'YER6VIP',title:'VIP 1 Gün',kind:'manual',amount:0,maxUses:25,usedBy:[],active:true}
+];
+function dbWheelRewardToApp(r){return {id:String(r.id),title:r.title,kind:r.kind||'ic_money',amount:Number(r.amount||0),chance:Number(r.chance||0),color:r.color||'#e61127',active:r.active!==false};}
+function dbPromoCodeToApp(c){return {id:String(c.id),code:c.code,title:c.title,kind:c.kind||'ic_money',amount:Number(c.amount||0),maxUses:Number(c.max_uses||c.maxUses||0),usedBy:c.used_by||c.usedBy||[],active:c.active!==false};}
+function dbPendingRewardToApp(r){return {id:String(r.id),username:r.username,discordId:r.discord_id,gameId:r.game_id||'',source:r.source,rewardTitle:r.reward_title,amount:Number(r.amount||0),status:r.status||'Bekliyor',command:r.command||'',createdAt:r.created_at?new Date(r.created_at).toLocaleString('tr-TR'):now(),deliveredBy:r.delivered_by||''};}
+function rewardCommand(gameId, amount){return gameId && Number(amount)>0 ? `/web para bank ${gameId} ${Number(amount)}` : 'Manuel teslim gerekli';}
+function pickWeightedReward(rewards){
+ const list=(rewards||[]).filter(r=>r.active!==false && Number(r.chance)>0);
+ const total=list.reduce((a,r)=>a+Number(r.chance||0),0);
+ if(!list.length||!total) return null;
+ let rand=Math.random()*total;
+ for(const r of list){rand-=Number(r.chance||0); if(rand<=0) return r;}
+ return list[list.length-1];
+}
+function todayKey(){return new Date().toISOString().slice(0,10);}
 
 async function addDbLog(action, detail, actor='SYSTEM'){
   try{
@@ -280,7 +306,7 @@ function Title({k,t,p}) { return <div className="title"><span>{k}</span><h1>{t}<
 
 function Header({setPage,openLogin}) {
  const [open,setOpen]=useState(false);
- const nav=[['home','Ana Sayfa'],['rules','Kurallar'],['staff','Yönetim Kadrosu'],['characters','Karakterler'],['game','Karakter Oyunu'],['market','Donate Market']];
+ const nav=[['home','Ana Sayfa'],['rules','Kurallar'],['staff','Yönetim Kadrosu'],['characters','Karakterler'],['game','Karakter Oyunu'],['market','Donate Market'],['wheel','Şans Çarkı']];
  return <header className="header"><Logo/><nav className={open?'show':''}>{nav.map(([p,n])=><button key={p} onClick={()=>{setPage(p);setOpen(false)}}>{n}</button>)}</nav><div className="headButtons"><Button variant="ghost" onClick={()=>openLogin('admin')}>Giriş Yap</Button><Button onClick={()=>openLogin('register')}>Kayıt Ol</Button><button className="hamb" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></div></header>
 }
 
@@ -368,7 +394,7 @@ function HomePage({setPage,openLogin,announcements=[]}) {
  </div>
 }
 
-function Footer({setPage,openLogin}) { return <footer><div><Logo/><p>YER6 Roleplay, gerçekçi rol deneyimi sunan profesyonel yönetimli topluluk.</p><div className="social"><Instagram/><Youtube/></div></div><div><h3>Navigasyon</h3>{['Ana Sayfa','Kurallar','Karakterler','Karakter Oyunu','Donate Market'].map((x,i)=><p key={x} onClick={()=>setPage(['home','rules','characters','game','market'][i])}>› {x}</p>)}</div><div><h3>Destek</h3><p>› SSS</p><p>› Destek Talebi</p><p>› Rehberler</p></div><Card className="footPanel"><h3>Admin Paneli</h3><p>Yönetim paneline giriş yapın.</p><Button className="full" onClick={()=>openLogin('admin')}>Panel'e Giriş Yap</Button></Card></footer> }
+function Footer({setPage,openLogin}) { return <footer><div><Logo/><p>YER6 Roleplay, gerçekçi rol deneyimi sunan profesyonel yönetimli topluluk.</p><div className="social"><Instagram/><Youtube/></div></div><div><h3>Navigasyon</h3>{['Ana Sayfa','Kurallar','Karakterler','Karakter Oyunu','Donate Market','Şans Çarkı'].map((x,i)=><p key={x} onClick={()=>setPage(['home','rules','characters','game','market','wheel'][i])}>› {x}</p>)}</div><div><h3>Destek</h3><p>› SSS</p><p>› Destek Talebi</p><p>› Rehberler</p></div><Card className="footPanel"><h3>Admin Paneli</h3><p>Yönetim paneline giriş yapın.</p><Button className="full" onClick={()=>openLogin('admin')}>Panel'e Giriş Yap</Button></Card></footer> }
 
 function RulesPage({setPage,openLogin}) {
  const [search,setSearch]=useState(''); const [cat,setCat]=useState('Tümü');
@@ -402,6 +428,28 @@ function CharactersPage({setPage,openLogin}) {
 }
 
 function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <div className="inner"><Header setPage={setPage} openLogin={openLogin}/><main><Title k="MİNİ OYUN" t="Karakter Oyunu" p="Kader puanını belirle."/><Card className="game"><Gamepad2/><h2>{s??'?'}</h2><Button onClick={()=>setS(Math.ceil(Math.random()*100))}>Zar At</Button></Card></main></div> }
+
+
+function WheelPage({setPage,openLogin,wheelRewards=[]}) {
+ const rewards=(wheelRewards&&wheelRewards.length?wheelRewards:defaultWheelRewards).filter(r=>r.active!==false);
+ return <div className="inner wheelPublicPage"><Header setPage={setPage} openLogin={openLogin}/><main>
+  <section className="wheelPublicHero">
+   <div>
+    <span>YER6 ÖDÜL SİSTEMİ</span>
+    <h1>Şans Çarkı</h1>
+    <p>Günlük ödül çarkını çevirmek için oyuncu paneline giriş yap. IC para ödülleri bank olarak teslim edilir.</p>
+    <div className="heroButtons"><Button onClick={()=>openLogin('player')}>Oyuncu Girişi</Button><Button variant="ghost" onClick={()=>openLogin('register')}>Kayıt Ol</Button></div>
+   </div>
+   <div className="wheelPreviewOnly">
+    <div className="wheelPointer">▼</div>
+    <div className="rewardWheel visualOnly" style={{background:`conic-gradient(${rewards.map((r,i)=>`${r.color||'#e61127'} ${i*(360/rewards.length)}deg ${(i+1)*(360/rewards.length)}deg`).join(',')})`}}>
+     <div className="wheelCenter">YER6</div>
+    </div>
+   </div>
+  </section>
+  <section className="wheelRewardGrid">{rewards.map(r=><Card className="wheelRewardInfo" key={r.id}><b>{r.title}</b><p>Şans: %{r.chance}</p></Card>)}</section>
+ </main></div>
+}
 
 function MarketPage({setPage,openLogin,donate}) {
  const [selectedCategory,setSelectedCategory]=useState(null);
@@ -555,12 +603,16 @@ function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,reg
  </div>
 }
 
-function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements,banAppeals,setBanAppeals}) {
+function PlayerPanel({player,setPlayer,setPage,players,setPlayers,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements,banAppeals,setBanAppeals,wheelRewards,promoCodes,pendingRewards,setPendingRewards,referrals,setReferrals}) {
  const [active,setActive]=useState('AC (OCEAN) Destek');
  const [ticket,setTicket]=useState({type:'AC (OCEAN) Destek',title:'',description:'',proof:''});
  const [replyText,setReplyText]=useState('');
  const [app,setApp]=useState({name:player.username||'',age:'',experience:'',reason:''});
  const [banAppeal,setBanAppeal]=useState({characterName:'',discordId:player.discordId||'',eventDate:'',reason:'',record:''});
+ const [gameId,setGameId]=useState(player.gameId||'');
+ const [promoInput,setPromoInput]=useState('');
+ const [refInput,setRefInput]=useState('');
+ const [spinResult,setSpinResult]=useState(null);
  const myTickets=tickets.filter(t=>String(t.discordId)===String(player.discordId));
  const myOpenTickets=myTickets.filter(t=>t.state!=='Kapalı');
  const myClosedTickets=myTickets.filter(t=>t.state==='Kapalı');
@@ -619,6 +671,73 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
   setBanAppeal({characterName:'',discordId:player.discordId||'',eventDate:'',reason:'',record:''});
  }
 
+
+ async function createPendingReward(source,reward,detail='',targetPlayer=player){
+  const amount=Number(reward.amount||0);
+  const targetGameId=targetPlayer.gameId||gameId||'';
+  const command=rewardCommand(targetGameId,amount);
+  const payload={username:targetPlayer.username,discord_id:targetPlayer.discordId,game_id:targetGameId,source,reward_title:reward.title,amount,status:'Bekliyor',command};
+  const {data,error}=await supabase.from('pending_rewards').insert(payload).select().single();
+  if(error) console.log('Bekleyen ödül Supabase kayıt hatası:',error.message);
+  const item=data?dbPendingRewardToApp(data):{id:'local-'+Date.now(),username:targetPlayer.username,discordId:targetPlayer.discordId,gameId:targetGameId,source,rewardTitle:reward.title,amount,status:'Bekliyor',command,createdAt:now()};
+  setPendingRewards(p=>[item,...(p||[])]);
+  await addDbLog('REWARD_PENDING_CREATE', `${targetPlayer.username} için ${source} ödülü oluştu: ${reward.title} ${detail}`, targetPlayer.username);
+  return item;
+ }
+ async function saveGameId(){
+  if(!gameId.trim()) return alert('Oyun ID gir.');
+  await supabase.from('players').update({game_id:gameId.trim()}).eq('discord_id',player.discordId);
+  const updated={...player,gameId:gameId.trim()};
+  setPlayer(updated); localStorage.setItem('yer6_player_session',JSON.stringify(updated));
+  setPlayers&&setPlayers(prev=>(prev||[]).map(p=>String(p.discordId)===String(player.discordId)?{...p,gameId:gameId.trim()}:p));
+  await addDbLog('PLAYER_GAME_ID_UPDATE', `${player.username} oyun ID güncelledi: ${gameId.trim()}`, player.username);
+  alert('Oyun ID kaydedildi.');
+ }
+ async function spinWheel(){
+  if(!gameId.trim()) return alert('Ödül alabilmek için önce Profilim kısmından Oyun ID kaydetmelisin.');
+  const key='yer6_spin_'+player.discordId;
+  if(localStorage.getItem(key)===todayKey()) return alert('Bugün zaten çark çevirdin. Yarın tekrar dene.');
+  const reward=pickWeightedReward(wheelRewards&&wheelRewards.length?wheelRewards:defaultWheelRewards);
+  if(!reward) return alert('Aktif çark ödülü yok.');
+  setSpinResult(reward);
+  localStorage.setItem(key,todayKey());
+  if(reward.kind!=='empty') await createPendingReward('Şans Çarkı',reward);
+  else await addDbLog('WHEEL_EMPTY', `${player.username} çarktan boş kazandı.`, player.username);
+ }
+ async function usePromoCode(){
+  const code=promoInput.trim().toUpperCase();
+  if(!code) return alert('Kod gir.');
+  if(!gameId.trim()) return alert('Ödül alabilmek için önce Profilim kısmından Oyun ID kaydetmelisin.');
+  const item=(promoCodes||[]).find(c=>String(c.code).toUpperCase()===code && c.active!==false);
+  if(!item) return alert('Kod bulunamadı veya pasif.');
+  const usedBy=item.usedBy||[];
+  if(usedBy.map(String).includes(String(player.discordId))) return alert('Bu kodu daha önce kullandın.');
+  if(item.maxUses && usedBy.length>=Number(item.maxUses)) return alert('Kod kullanım limiti dolmuş.');
+  await createPendingReward('Kod Sistemi',{...item,title:item.title||item.code},code);
+  const updated={...item,usedBy:[...usedBy,player.discordId]};
+  setPromoInput('');
+  await supabase.from('promo_codes').update({used_by:updated.usedBy}).eq('id',item.id);
+  await addDbLog('PROMO_CODE_USE', `${player.username} kod kullandı: ${code}`, player.username);
+  alert('Kod ödülün bekleyen ödüllere düştü.');
+ }
+ async function useReferralCode(){
+  const ref=refInput.trim();
+  if(!ref) return alert('Referans Discord ID / kod gir.');
+  if(ref===String(player.discordId)) return alert('Kendi referansını kullanamazsın.');
+  const already=(referrals||[]).some(r=>String(r.referredDiscordId||r.referred_discord_id)===String(player.discordId));
+  if(already) return alert('Bu hesap daha önce referans kullanmış.');
+  const referrer=(players||[]).find(p=>String(p.discordId)===String(ref));
+  if(!referrer) return alert('Referans oyuncu bulunamadı. Discord ID doğru olmalı.');
+  const refPayload={referrer_discord_id:referrer.discordId,referrer_username:referrer.username,referred_discord_id:player.discordId,referred_username:player.username,status:'Bekliyor'};
+  const {data,error}=await supabase.from('referrals').insert(refPayload).select().single();
+  if(error) console.log('Referans Supabase kayıt hatası:',error.message);
+  const refItem=data?{id:String(data.id),referrerDiscordId:data.referrer_discord_id,referrerUsername:data.referrer_username,referredDiscordId:data.referred_discord_id,referredUsername:data.referred_username,status:data.status||'Bekliyor',createdAt:data.created_at?new Date(data.created_at).toLocaleString('tr-TR'):now()}:{id:'local-'+Date.now(),referrerDiscordId:referrer.discordId,referrerUsername:referrer.username,referredDiscordId:player.discordId,referredUsername:player.username,status:'Bekliyor',createdAt:now()};
+  setReferrals(p=>[refItem,...(p||[])]);
+  await createPendingReward('Referans Sistemi',{title:'Referans Ödülü - 50.000 IC Para',kind:'ic_money',amount:50000},'',referrer);
+  await addDbLog('REFERRAL_USE', `${player.username}, ${referrer.username} referansını kullandı.`, player.username);
+  setRefInput(''); alert('Referans kaydedildi. Ödül yönetime düştü.');
+ }
+
  async function sendApp() {
   if(myApp) return alert('Bu hesap daha önce başvuru göndermiş.');
   if(!app.name||!app.reason) return alert('Ad ve başvuru nedeni gerekli.');
@@ -633,7 +752,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
   await addDbLog('APPLICATION_CREATE', `${player.username} başvuru gönderdi.`, player.username);
  }
 
- const menu=['Duyurular','AC (OCEAN) Destek','Taleplerim','Kapanan Destekler','Ban İtiraz Başvurusu','Yetkili Başvuru','Profilim'];
+ const menu=['Duyurular','Şans Çarkı','Kod Kullan','Referans Sistemi','Ödüllerim','AC (OCEAN) Destek','Taleplerim','Kapanan Destekler','Ban İtiraz Başvurusu','Yetkili Başvuru','Profilim'];
  return <div className="adminLayout playerLayout cleanPlayerPanel">
   <aside>
    <Logo/>
@@ -646,6 +765,14 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
 
    {active==='Duyurular'&&<Card className="panel announcementBox"><h2><Bell size={18}/> Duyuru Kanalı</h2>{(!announcements||announcements.length===0)&&<p>Henüz duyuru yok.</p>}{(announcements||[]).map(a=><div className="announcementItem" key={a.id}><h3>{a.title}</h3><p>{a.content}</p><small>{a.createdAt}</small></div>)}</Card>}
 
+   {active==='Şans Çarkı'&&<Card className="panel wheelPanel"><h2>🎡 Günlük Şans Çarkı</h2><p>Her oyuncu günde 1 kez çevirebilir. IC para ödülleri bank olarak bekleyen ödüllere düşer.</p><div className="wheelPlayGrid"><div className="wheelPointer">▼</div><div className="rewardWheel" style={{background:`conic-gradient(${(wheelRewards&&wheelRewards.length?wheelRewards:defaultWheelRewards).map((r,i,arr)=>`${r.color||'#e61127'} ${i*(360/arr.length)}deg ${(i+1)*(360/arr.length)}deg`).join(',')})`}}><div className="wheelCenter">YER6</div></div><div className="wheelRewardList">{(wheelRewards&&wheelRewards.length?wheelRewards:defaultWheelRewards).filter(r=>r.active!==false).map(r=><div className="wheelRewardRow" key={r.id}><b>{r.title}</b><span>%{r.chance}</span></div>)}</div></div><Button onClick={spinWheel}>Çarkı Çevir</Button>{spinResult&&<div className="resultBox"><b>Kazandığın:</b> {spinResult.title}</div>}</Card>}
+
+   {active==='Kod Kullan'&&<Card className="panel"><h2>🎁 Kod Kullan</h2><p>Yönetimin paylaştığı kodu gir, ödülün bekleyen ödüllere düşsün.</p><Field value={promoInput} onChange={setPromoInput} placeholder="Örn: YER6ACILIS"/><Button onClick={usePromoCode}>Kodu Kullan</Button></Card>}
+
+   {active==='Referans Sistemi'&&<Card className="panel"><h2>⭐ Referans Sistemi</h2><p>Senin referans kodun / Discord ID:</p><div className="miniCommand">{player.discordId}</div><p>Bir arkadaşın kayıt olduktan sonra senin Discord ID'ni buraya girerse sana 50.000 IC para ödülü düşer.</p><Field value={refInput} onChange={setRefInput} placeholder="Referans olduğun kişinin Discord ID'si"/><Button onClick={useReferralCode}>Referans Kullan</Button></Card>}
+
+   {active==='Ödüllerim'&&<Card className="panel"><h2>🎒 Ödüllerim</h2>{(pendingRewards||[]).filter(r=>String(r.discordId)===String(player.discordId)).length===0&&<p>Ödülün yok.</p>}{(pendingRewards||[]).filter(r=>String(r.discordId)===String(player.discordId)).map(r=><div className="row" key={r.id}><div><b>{r.rewardTitle}</b><p>{r.source} • {r.status}</p><small>{r.createdAt}</small></div><Badge tone={r.status==='Teslim Edildi'?'good':'warn'}>{r.status}</Badge></div>)}</Card>}
+
    {active==='AC (OCEAN) Destek'&&<Card className="panel"><h2>AC (OCEAN) Destek Aç</h2><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>AC (OCEAN) Destek</option><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>WL İtiraz</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
 
    {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Ticket Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
@@ -657,12 +784,12 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
 
    {active==='Yetkili Başvuru'&&<Card className="panel"><h2>Yetkili Başvurusu</h2>{myApp&&<Badge tone="note">Başvuru durumun: {myApp.status}</Badge>}<Field value={app.name} onChange={v=>setApp({...app,name:v})} placeholder="Ad Soyad"/><Field value={app.age} onChange={v=>setApp({...app,age:v})} placeholder="Yaş"/><TextArea value={app.experience} onChange={v=>setApp({...app,experience:v})} placeholder="Yetkili deneyimin"/><TextArea value={app.reason} onChange={v=>setApp({...app,reason:v})} placeholder="Neden yetkili olmak istiyorsun?"/><Button disabled={!!myApp} onClick={sendApp}>Başvuru Gönder</Button></Card>}
 
-   {active==='Profilim'&&<Card className="panel"><h2>Profil</h2><p>Kullanıcı: {player.username}</p><p>Discord ID: {player.discordId}</p><p>Steam: {player.steam||'Eklenmedi'}</p>{myPunishments.length>0&&<><h3>Ceza Geçmişi</h3>{myPunishments.map(p=><div className="row" key={p.id}><div><b>{p.rule}</b><p>{p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small></div><Badge tone={p.status==='Aktif'?'bad':'good'}>{p.status}</Badge></div>)}</>}</Card>}
+   {active==='Profilim'&&<Card className="panel"><h2>Profil</h2><p>Kullanıcı: {player.username}</p><p>Discord ID: {player.discordId}</p><p>Steam: {player.steam||'Eklenmedi'}</p><h3>Oyun ID</h3><p>IC para ödülleri bu ID'ye bank olarak teslim edilir.</p><div className="grid3"><Field value={gameId} onChange={setGameId} placeholder="Oyun ID / karakter ID"/><Button onClick={saveGameId}>ID Kaydet</Button></div>{myPunishments.length>0&&<><h3>Ceza Geçmişi</h3>{myPunishments.map(p=><div className="row" key={p.id}><div><b>{p.rule}</b><p>{p.penalty} • {p.status}</p><small>Yetkili: {p.by} • {p.createdAt}</small></div><Badge tone={p.status==='Aktif'?'bad':'good'}>{p.status}</Badge></div>)}</>}</Card>}
   </main>
  </div>
 }
 
-function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,donate,setDonate,staffRanks,setStaffRanks,staffMembers,setStaffMembers,tickets,setTickets,apps,setApps,banAppeals,setBanAppeals,punishments,setPunishments,logs,setLogs,announcements,setAnnouncements}) {
+function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,donate,setDonate,staffRanks,setStaffRanks,staffMembers,setStaffMembers,tickets,setTickets,apps,setApps,banAppeals,setBanAppeals,punishments,setPunishments,logs,setLogs,announcements,setAnnouncements,wheelRewards,setWheelRewards,promoCodes,setPromoCodes,pendingRewards,setPendingRewards,referrals,setReferrals}) {
  const [active,setActive]=useState('Dashboard');
  const [staffReply,setStaffReply]=useState('');
  const [announcement,setAnnouncement]=useState({title:'',content:''});
@@ -670,8 +797,10 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  const [newStaff,setNewStaff]=useState({name:'',discordId:'',rank:'Lead Admin',duty:'',status:'Aktif',image:''});
  const [editDonate,setEditDonate]=useState(null);
  const [punish,setPunish]=useState({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
+ const [newWheelReward,setNewWheelReward]=useState({title:'100.000 IC Para',kind:'ic_money',amount:100000,chance:10,color:'#e61127',active:true});
+ const [newPromoCode,setNewPromoCode]=useState({code:'YER6',title:'100.000 IC Para',kind:'ic_money',amount:100000,maxUses:50,active:true});
  const rank=staffRanks.find(r=>r.rank===newAdmin.role)||staffRanks[0];
- const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler',...(canViewBanAppeals(admin)?['Ban İtirazları']:[]),'Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
+ const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler',...(canViewBanAppeals(admin)?['Ban İtirazları']:[]),'Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Çark Ayarları','Kod Yönetimi','Referans Yönetimi','Bekleyen Ödüller','Loglar'];
 
  async function addAdmin(){
  if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');
@@ -804,6 +933,47 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   await supabase.from('staff_members').update({rank:next.rank,level:next.level}).eq('discord_id',id);
   setStaffMembers(prev=>prev.map(s=>String(s.discordId)===id?{...s,rank:next.rank,level:next.level}:s));
   await addDbLog('STAFF_RANK_UPDATE', `${target.name}: ${target.rank} -> ${next.rank}`, admin.username);
+ }
+
+
+ async function addWheelReward(){
+  if(!newWheelReward.title||!newWheelReward.chance) return alert('Ödül adı ve şans yüzdesi gerekli.');
+  const payload={title:newWheelReward.title,kind:newWheelReward.kind,amount:Number(newWheelReward.amount||0),chance:Number(newWheelReward.chance||0),color:newWheelReward.color||'#e61127',active:newWheelReward.active!==false};
+  const {data,error}=await supabase.from('wheel_rewards').insert(payload).select().single();
+  if(error) console.log('Çark ödülü Supabase kayıt hatası:',error.message);
+  const item=data?dbWheelRewardToApp(data):{id:'local-'+Date.now(),...payload};
+  setWheelRewards(p=>[item,...(p||[])]);
+  await addDbLog('WHEEL_REWARD_ADD', `${item.title} eklendi.`, admin.username);
+ }
+ async function removeWheelReward(id){
+  if(!confirm('Çark ödülü silinsin mi?')) return;
+  await supabase.from('wheel_rewards').delete().eq('id',id);
+  setWheelRewards(p=>(p||[]).filter(x=>String(x.id)!==String(id)));
+  await addDbLog('WHEEL_REWARD_DELETE', `${id} çark ödülü silindi.`, admin.username);
+ }
+ async function addPromoCode(){
+  if(!newPromoCode.code||!newPromoCode.title) return alert('Kod ve ödül adı gerekli.');
+  const payload={code:newPromoCode.code.trim().toUpperCase(),title:newPromoCode.title,kind:newPromoCode.kind,amount:Number(newPromoCode.amount||0),max_uses:Number(newPromoCode.maxUses||0),used_by:[],active:newPromoCode.active!==false};
+  const {data,error}=await supabase.from('promo_codes').insert(payload).select().single();
+  if(error) console.log('Kod Supabase kayıt hatası:',error.message);
+  const item=data?dbPromoCodeToApp(data):{id:'local-'+Date.now(),code:payload.code,title:payload.title,kind:payload.kind,amount:payload.amount,maxUses:payload.max_uses,usedBy:[],active:payload.active};
+  setPromoCodes(p=>[item,...(p||[])]);
+  await addDbLog('PROMO_CODE_ADD', `${item.code} kodu eklendi.`, admin.username);
+ }
+ async function removePromoCode(id){
+  if(!confirm('Kod silinsin mi?')) return;
+  await supabase.from('promo_codes').delete().eq('id',id);
+  setPromoCodes(p=>(p||[]).filter(x=>String(x.id)!==String(id)));
+  await addDbLog('PROMO_CODE_DELETE', `${id} kodu silindi.`, admin.username);
+ }
+ async function deliverReward(id){
+  const item=(pendingRewards||[]).find(r=>String(r.id)===String(id));
+  if(!item) return;
+  const command=item.command||rewardCommand(item.gameId,item.amount);
+  copyText(command);
+  if(!String(id).startsWith('local-')) await supabase.from('pending_rewards').update({status:'Teslim Edildi',delivered_by:admin.username}).eq('id',id);
+  setPendingRewards(p=>(p||[]).map(r=>String(r.id)===String(id)?{...r,status:'Teslim Edildi',deliveredBy:admin.username}:r));
+  await addDbLog('REWARD_DELIVERED', `${item.username} ödülü teslim edildi: ${item.rewardTitle} | ${command}`, admin.username);
  }
 
  const activePunishments=punishments.filter(p=>p.status==='Aktif');
@@ -1005,6 +1175,15 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   </div>
  </Card></div>}
 
+
+ {active==='Çark Ayarları'&&<Card className="panel"><h2>🎡 Çark Ayarları</h2><p>Ödül ve yüzde ayarlarını buradan yönet. Yüzdeleri sen belirliyorsun.</p><div className="grid4"><Field value={newWheelReward.title} onChange={v=>setNewWheelReward({...newWheelReward,title:v})} placeholder="Ödül adı"/><select className="field" value={newWheelReward.kind} onChange={e=>setNewWheelReward({...newWheelReward,kind:e.target.value})}><option value="ic_money">IC Para</option><option value="manual">Manuel Ödül</option><option value="empty">Boş</option></select><Field value={String(newWheelReward.amount)} onChange={v=>setNewWheelReward({...newWheelReward,amount:v})} placeholder="Miktar"/><Field value={String(newWheelReward.chance)} onChange={v=>setNewWheelReward({...newWheelReward,chance:v})} placeholder="Yüzde"/></div><div className="grid3"><Field value={newWheelReward.color} onChange={v=>setNewWheelReward({...newWheelReward,color:v})} placeholder="#e61127"/><Button onClick={addWheelReward}>Ödül Ekle</Button></div>{(wheelRewards||[]).map(r=><div className="row" key={r.id}><div><b>{r.title}</b><p>{r.kind} • {r.amount} • Şans: %{r.chance}</p></div><div className="actions"><Badge>{r.active!==false?'Aktif':'Pasif'}</Badge><Button variant="ghost" onClick={()=>removeWheelReward(r.id)}>Sil</Button></div></div>)}</Card>}
+
+ {active==='Kod Yönetimi'&&<Card className="panel"><h2>🎁 Kod Yönetimi</h2><div className="grid4"><Field value={newPromoCode.code} onChange={v=>setNewPromoCode({...newPromoCode,code:v})} placeholder="Kod"/><Field value={newPromoCode.title} onChange={v=>setNewPromoCode({...newPromoCode,title:v})} placeholder="Ödül adı"/><Field value={String(newPromoCode.amount)} onChange={v=>setNewPromoCode({...newPromoCode,amount:v})} placeholder="IC miktar"/><Field value={String(newPromoCode.maxUses)} onChange={v=>setNewPromoCode({...newPromoCode,maxUses:v})} placeholder="Kullanım limiti"/></div><Button onClick={addPromoCode}>Kod Ekle</Button>{(promoCodes||[]).map(c=><div className="row" key={c.id}><div><b>{c.code}</b><p>{c.title} • {c.amount} IC • Kullanım: {(c.usedBy||[]).length}/{c.maxUses||'∞'}</p></div><div className="actions"><Badge>{c.active!==false?'Aktif':'Pasif'}</Badge><Button variant="ghost" onClick={()=>removePromoCode(c.id)}>Sil</Button></div></div>)}</Card>}
+
+ {active==='Referans Yönetimi'&&<Card className="panel"><h2>⭐ Referans Yönetimi</h2>{(!referrals||referrals.length===0)&&<p>Referans kaydı yok.</p>}{(referrals||[]).map(r=><div className="row" key={r.id}><div><b>{r.referrerUsername} → {r.referredUsername}</b><p>{r.referrerDiscordId} referans oldu</p><small>{r.createdAt}</small></div><Badge>{r.status||'Bekliyor'}</Badge></div>)}</Card>}
+
+ {active==='Bekleyen Ödüller'&&<Card className="panel"><h2>🎒 Bekleyen Ödüller</h2><p>IC para ödülleri Discord bot komutu olarak bank hesabına verilecek. Butona basınca komut kopyalanır.</p>{(!pendingRewards||pendingRewards.length===0)&&<p>Bekleyen ödül yok.</p>}{(pendingRewards||[]).map(r=><div className="row" key={r.id}><div><b>{r.username} • {r.rewardTitle}</b><p>{r.source} • Oyun ID: {r.gameId||'Yok'} • {r.status}</p><small>{r.createdAt}</small><div className="miniCommand">{r.command||rewardCommand(r.gameId,r.amount)}</div></div><div className="actions"><Badge tone={r.status==='Teslim Edildi'?'good':'warn'}>{r.status}</Badge>{r.status!=='Teslim Edildi'&&<Button onClick={()=>deliverReward(r.id)}>Teslim Et</Button>}</div></div>)}</Card>}
+
  {active==='Loglar'&&<Card className="panel"><h2>Loglar</h2>{logs.map((l,i)=><div className="log" key={i}>{l}</div>)}</Card>}
  </main></div>
 }
@@ -1023,6 +1202,10 @@ function App(){
  const [banAppeals,setBanAppeals]=useState(()=>JSON.parse(localStorage.getItem('yer6_ban_appeals_v1')||'null')||[]);
  const [punishments,setPunishments]=useState(()=>JSON.parse(localStorage.getItem('yer6_punishments_v10')||'null')||[]);
  const [announcements,setAnnouncements]=useState(()=>JSON.parse(localStorage.getItem('yer6_announcements_v1')||'null')||[]);
+ const [wheelRewards,setWheelRewards]=useState(()=>JSON.parse(localStorage.getItem('yer6_wheel_rewards_v1')||'null')||defaultWheelRewards);
+ const [promoCodes,setPromoCodes]=useState(()=>JSON.parse(localStorage.getItem('yer6_promo_codes_v1')||'null')||defaultPromoCodes);
+ const [pendingRewards,setPendingRewards]=useState(()=>JSON.parse(localStorage.getItem('yer6_pending_rewards_v1')||'null')||[]);
+ const [referrals,setReferrals]=useState(()=>JSON.parse(localStorage.getItem('yer6_referrals_v1')||'null')||[]);
  
  const [logs,setLogs]=useState(['Sistem hazır.']); const [admin,setAdmin]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_admin_session')||'null')}catch{return null}}); const [player,setPlayer]=useState(()=>{try{return JSON.parse(localStorage.getItem('yer6_player_session')||'null')}catch{return null}});
 
@@ -1044,7 +1227,7 @@ function App(){
 
  async function loadSupabaseData(){
   try{
-    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes]=await Promise.all([
+    const [adminsRes,playersRes,ranksRes,staffRes,ticketsRes,appsRes,banAppealsRes,punishRes,donateRes,announcementsRes,logsRes,wheelRewardsRes,promoCodesRes,pendingRewardsRes,referralsRes]=await Promise.all([
       supabase.from('admins').select('*').order('level',{ascending:false}),
       supabase.from('players').select('*').order('created_at',{ascending:false}),
       supabase.from('staff_ranks').select('*').order('level',{ascending:true}),
@@ -1055,7 +1238,11 @@ function App(){
       supabase.from('punishments').select('*').order('created_at',{ascending:false}),
       supabase.from('donate_categories').select('*').order('id',{ascending:true}),
       supabase.from('announcements').select('*').order('created_at',{ascending:false}),
-      supabase.from('logs').select('*').order('created_at',{ascending:false}).limit(250)
+      supabase.from('logs').select('*').order('created_at',{ascending:false}).limit(250),
+      supabase.from('wheel_rewards').select('*').order('id',{ascending:true}),
+      supabase.from('promo_codes').select('*').order('id',{ascending:true}),
+      supabase.from('pending_rewards').select('*').order('created_at',{ascending:false}),
+      supabase.from('referrals').select('*').order('created_at',{ascending:false})
     ]);
     if(!adminsRes.error && adminsRes.data?.length) setAdmins(adminsRes.data.map(dbAdminToApp));
     if(!playersRes.error) setPlayers((playersRes.data||[]).map(dbPlayerToApp));
@@ -1068,6 +1255,10 @@ function App(){
     if(!donateRes.error) setDonate((donateRes.data||[]).map(dbDonateToApp));
     if(!announcementsRes.error) setAnnouncements((announcementsRes.data||[]).map(dbAnnouncementToApp));
     if(!logsRes.error) setLogs((logsRes.data||[]).map(l=>`${l.created_at ? new Date(l.created_at).toLocaleString('tr-TR') : ''} - ${l.actor||'SYSTEM'} - ${l.action}: ${l.detail||''}`));
+    if(!wheelRewardsRes.error && wheelRewardsRes.data?.length) setWheelRewards((wheelRewardsRes.data||[]).map(dbWheelRewardToApp));
+    if(!promoCodesRes.error && promoCodesRes.data?.length) setPromoCodes((promoCodesRes.data||[]).map(dbPromoCodeToApp));
+    if(!pendingRewardsRes.error) setPendingRewards((pendingRewardsRes.data||[]).map(dbPendingRewardToApp));
+    if(!referralsRes.error) setReferrals((referralsRes.data||[]).map(r=>({id:String(r.id),referrerDiscordId:r.referrer_discord_id,referrerUsername:r.referrer_username,referredDiscordId:r.referred_discord_id,referredUsername:r.referred_username,status:r.status||'Bekliyor',createdAt:r.created_at?new Date(r.created_at).toLocaleString('tr-TR'):now()})));
   }catch(e){ console.log('Supabase veri çekme hatası', e); }
  }
 
@@ -1090,7 +1281,7 @@ function App(){
   });
  },[]);
 
- useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_ban_appeals_v1',JSON.stringify(banAppeals)),[banAppeals]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]); useEffect(()=>localStorage.setItem('yer6_announcements_v1',JSON.stringify(announcements)),[announcements]);
+ useEffect(()=>localStorage.setItem('yer6_admins_v19',JSON.stringify(admins)),[admins]); useEffect(()=>localStorage.setItem('yer6_players_v10',JSON.stringify(players)),[players]); useEffect(()=>localStorage.setItem('yer6_donate_v12',JSON.stringify(donate)),[donate]); useEffect(()=>localStorage.setItem('yer6_ranks_v19',JSON.stringify(staffRanks)),[staffRanks]); useEffect(()=>localStorage.setItem('yer6_staff_members_v19',JSON.stringify(staffMembers)),[staffMembers]); useEffect(()=>localStorage.setItem('yer6_tickets_v10',JSON.stringify(tickets)),[tickets]); useEffect(()=>localStorage.setItem('yer6_apps_v10',JSON.stringify(apps)),[apps]); useEffect(()=>localStorage.setItem('yer6_ban_appeals_v1',JSON.stringify(banAppeals)),[banAppeals]); useEffect(()=>localStorage.setItem('yer6_punishments_v10',JSON.stringify(punishments)),[punishments]); useEffect(()=>localStorage.setItem('yer6_announcements_v1',JSON.stringify(announcements)),[announcements]); useEffect(()=>localStorage.setItem('yer6_wheel_rewards_v1',JSON.stringify(wheelRewards)),[wheelRewards]); useEffect(()=>localStorage.setItem('yer6_promo_codes_v1',JSON.stringify(promoCodes)),[promoCodes]); useEffect(()=>localStorage.setItem('yer6_pending_rewards_v1',JSON.stringify(pendingRewards)),[pendingRewards]); useEffect(()=>localStorage.setItem('yer6_referrals_v1',JSON.stringify(referrals)),[referrals]);
 
  function openLogin(mode='player'){
   setLoginMode(mode);
@@ -1146,9 +1337,10 @@ if(page==='home')return <HomePage setPage={setPage} openLogin={openLogin} announ
  if(page==='characters')return <CharactersPage setPage={setPage} openLogin={openLogin}/>;
  if(page==='game')return <GamePage setPage={setPage} openLogin={openLogin}/>;
  if(page==='market')return <MarketPage setPage={setPage} openLogin={openLogin} donate={donate}/>;
+ if(page==='wheel')return <WheelPage setPage={setPage} openLogin={openLogin} wheelRewards={wheelRewards}/>;
  if(page==='login') return <LoginPage setPage={setPage} mode={loginMode} setMode={setLoginMode} auth={auth} setAuth={setAuth} loginAdmin={loginAdmin} loginPlayer={loginPlayer} registerPlayer={registerPlayer}/>;
- if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs} announcements={announcements} setAnnouncements={setAnnouncements}/>;
- if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs} announcements={announcements}/>;
+ if(page==='admin'&&admin)return <AdminPanel admin={admin} setAdmin={setAdmin} setPage={setPage} admins={admins} setAdmins={setAdmins} players={players} setPlayers={setPlayers} donate={donate} setDonate={setDonate} staffRanks={staffRanks} setStaffRanks={setStaffRanks} staffMembers={staffMembers} setStaffMembers={setStaffMembers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} logs={logs} setLogs={setLogs} announcements={announcements} setAnnouncements={setAnnouncements} wheelRewards={wheelRewards} setWheelRewards={setWheelRewards} promoCodes={promoCodes} setPromoCodes={setPromoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals}/>;
+ if(page==='player'&&player)return <PlayerPanel player={player} setPlayer={setPlayer} setPage={setPage} players={players} setPlayers={setPlayers} tickets={tickets} setTickets={setTickets} apps={apps} setApps={setApps} banAppeals={banAppeals} setBanAppeals={setBanAppeals} punishments={punishments} setPunishments={setPunishments} setLogs={setLogs} announcements={announcements} wheelRewards={wheelRewards} promoCodes={promoCodes} pendingRewards={pendingRewards} setPendingRewards={setPendingRewards} referrals={referrals} setReferrals={setReferrals}/>;
  return <HomePage setPage={setPage} openLogin={openLogin} announcements={announcements}/>
 }
 createRoot(document.getElementById('root')).render(<App/>);

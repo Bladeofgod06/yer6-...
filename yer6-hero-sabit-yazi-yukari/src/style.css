@@ -1088,3 +1088,69 @@
     min-height:auto;
   }
 }
+
+/* =========================================================
+   YER6 REWARD SYSTEMS: Şans Çarkı + Kod + Referans + Ödüller
+   ========================================================= */
+.wheelPublicHero,.wheelPanel{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(255,31,49,.35)!important;
+  background:
+    radial-gradient(circle at 20% 15%,rgba(255,31,49,.22),transparent 32%),
+    linear-gradient(135deg,rgba(13,15,20,.96),rgba(3,5,8,.98))!important;
+}
+.wheelPublicHero{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  align-items:center;
+  gap:26px;
+  padding:42px;
+  border:1px solid rgba(255,31,49,.25);
+  border-radius:26px;
+  min-height:390px;
+  box-shadow:0 30px 90px rgba(0,0,0,.48);
+}
+.wheelPublicHero span{color:#ff1f31;font-weight:1000;letter-spacing:3px;font-size:13px}
+.wheelPublicHero h1{font-size:clamp(42px,5vw,76px);line-height:.95;margin:14px 0;text-transform:uppercase}
+.wheelPublicHero p{color:#bbb;line-height:1.7;max-width:720px}
+.wheelPreviewOnly{display:grid;place-items:center;position:relative;min-height:330px}
+.wheelPlayGrid{display:grid;grid-template-columns:380px 1fr;gap:26px;align-items:center;position:relative;margin:20px 0}
+.rewardWheel{
+  width:340px;height:340px;border-radius:50%;position:relative;margin:auto;
+  border:10px solid #111827;
+  box-shadow:0 0 0 2px rgba(255,31,49,.42),0 0 45px rgba(255,31,49,.22),inset 0 0 45px rgba(0,0,0,.65);
+  animation:wheelIdle 7s linear infinite;
+}
+.rewardWheel.visualOnly{width:330px;height:330px}
+.rewardWheel:before{content:"";position:absolute;inset:16px;border-radius:50%;border:1px solid rgba(255,255,255,.16)}
+.wheelCenter{
+  position:absolute;inset:50%;transform:translate(-50%,-50%);
+  width:118px;height:118px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,#05070a,#171b22);
+  border:2px solid rgba(255,31,49,.45);
+  color:#fff;font-weight:1000;letter-spacing:1px;
+  box-shadow:0 0 35px rgba(255,31,49,.25);
+}
+.wheelPointer{
+  position:absolute;top:0;left:170px;z-index:5;color:#ff1f31;font-size:32px;
+  text-shadow:0 0 22px rgba(255,31,49,.8);
+}
+.wheelPreviewOnly .wheelPointer{left:50%;transform:translateX(-50%);top:2px}
+.wheelRewardList{display:grid;gap:10px}
+.wheelRewardRow,.wheelRewardInfo{
+  padding:14px 16px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(0,0,0,.28);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+}
+.wheelRewardRow span{color:#ff9aa8;font-weight:1000}
+.wheelRewardGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.wheelRewardInfo{display:block}
+.wheelRewardInfo p{color:#aaa;margin:8px 0 0}
+.resultBox{margin-top:14px;padding:16px;border-radius:12px;border:1px solid rgba(34,197,94,.35);background:rgba(5,45,26,.45);color:#8bffc2;font-weight:900}
+@keyframes wheelIdle{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(max-width:1000px){
+  .wheelPublicHero,.wheelPlayGrid{grid-template-columns:1fr}
+  .rewardWheel{width:280px;height:280px}
+  .wheelPointer{left:50%;transform:translateX(-50%)}
+  .wheelRewardGrid{grid-template-columns:1fr}
+}
