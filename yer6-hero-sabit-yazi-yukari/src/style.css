@@ -841,87 +841,77 @@
   .commandCards{grid-template-columns:1fr!important}
 }
 
-
 /* =========================================================
-   YER6 DUYURU + KÜÇÜK TICKET + KAPANAN TICKET FIX
+   DONATE MARKET KATEGORI > URUN KARTLARI SISTEMI
    ========================================================= */
-.compactTicket{
-  max-width:850px;
-  margin-left:auto;
-  margin-right:auto;
-  padding:12px;
-}
-
-.compactTicket .row{
-  margin-bottom:8px;
-}
-
-.compactMessages{
-  max-height:230px;
-  overflow-y:auto;
-  padding-right:6px;
-}
-
-.closedTicket{
-  opacity:.86;
-  max-height:105px;
-  overflow:hidden;
-  border-color:rgba(255,255,255,.12)!important;
-}
-
-.announcementBox{
-  padding:22px;
-}
-
-.announcementBox h2{
+.donateAdminHero{
+  padding:24px!important;
   display:flex;
   align-items:center;
-  gap:8px;
+  justify-content:space-between;
+  gap:18px;
 }
-
-.announcementItem{
-  padding:16px;
-  border-radius:14px;
-  background:rgba(255,31,49,.08);
-  border:1px solid rgba(255,31,49,.22);
-  margin:14px 0;
+.donateAdminHero h2{margin:0 0 8px!important}
+.donateLuxuryBody b,
+.donateAdminBody b{
+  display:block;
+  color:#ffb4bd;
+  margin:10px 0 14px;
 }
-
-.announcementItem h3{
-  margin:0 0 8px;
+.donateCategoryModal{
+  width:min(1180px,96vw)!important;
+  max-height:92vh!important;
+  overflow:auto!important;
+}
+.donateProductGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  margin-top:18px;
+}
+.donateProductCard{
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:22px!important;
+}
+.donateProductPhoto{
+  height:230px;
+  display:grid;
+  place-items:center;
+  background:#07090d;
   color:#ff1f31;
 }
-
-.announcementItem p{
-  color:#ddd;
-  line-height:1.55;
-  margin:0 0 8px;
+.donateProductPhoto img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
 }
-
-.announcementItem small{
-  color:#888;
+.donateProductText{padding:20px}
+.donateProductText small{color:#ff1f31;font-weight:1000}
+.donateProductText h3{font-size:24px;margin:8px 0}
+.donateProductText p{color:#aaa;min-height:44px}
+.donateProductText b{display:block;margin:8px 0 14px;color:#fff}
+.donateSliderTopActions{margin-bottom:14px}
+.smallHead{margin-top:14px!important}
+.smallHead h4{margin:0;color:#fff}
+.donatePhotoEditorGrid{display:grid;gap:10px;margin:10px 0 14px}
+.donatePhotoEditor{
+  display:grid;
+  grid-template-columns:1fr 1.4fr auto;
+  gap:8px;
+  align-items:center;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  background:rgba(0,0,0,.22);
 }
-
-.adminAnnouncementItem{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
+.donatePhotoEditor .field{margin-bottom:0!important}
+@media(max-width:1200px){
+  .donateProductGrid{grid-template-columns:repeat(2,1fr)}
 }
-
-@media(max-width:800px){
-  .compactTicket{
-    max-width:100%;
-    padding:10px;
-  }
-  .compactMessages{
-    max-height:210px;
-  }
-  .adminAnnouncementItem{
-    display:block;
-  }
-  .adminAnnouncementItem .btn{
-    margin-top:10px;
-    width:100%;
-  }
+@media(max-width:850px){
+  .donateAdminHero{flex-direction:column;align-items:flex-start}
+  .donateProductGrid{grid-template-columns:1fr}
+  .donatePhotoEditor{grid-template-columns:1fr}
 }

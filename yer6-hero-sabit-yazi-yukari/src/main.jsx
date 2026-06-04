@@ -76,21 +76,42 @@ const starterAdmins = [
 
 const donateDefault = [];
 
-function normalizeDonateCategory(d){
- const items=Array.isArray(d.items)?d.items:[];
- const images=Array.isArray(d.images)?d.images:[];
- const products=Array.isArray(d.products)?d.products:[];
- const photos=Array.isArray(d.photos)&&d.photos.length
-  ? d.photos
-  : [
-     ...images.filter(Boolean).map((url,i)=>({title:items[i]||'Donate Ürün',url})),
-     ...products.filter(p=>p.image).map(p=>({title:p.name||'Donate Ürün',url:p.image}))
-    ];
+function normalizeDonateProduct(p, index=0){
+ const rawPhotos=Array.isArray(p?.photos)?p.photos:[];
+ const image=p?.image||p?.cover||p?.url||'';
+ const photos=rawPhotos.length
+  ? rawPhotos.filter(x=>x).map((x,i)=>typeof x==='string'?{title:p?.name||('Fotoğraf '+(i+1)),url:x}:{title:x.title||p?.name||('Fotoğraf '+(i+1)),url:x.url||''})
+  : image ? [{title:p?.name||('Ürün '+(index+1)),url:image}] : [];
  return {
-  id:d.id,
-  type:d.type||'Yeni Kategori',
-  desc:d.desc||'Bu kategorideki özel donate ürünleri.',
-  cover:d.cover||photos.find(p=>p.url)?.url||images.find(Boolean)||products.find(p=>p.image)?.image||'',
+  id:p?.id||Date.now()+index,
+  name:p?.name||p?.title||('Ürün '+(index+1)),
+  desc:p?.desc||p?.description||'',
+  cover:p?.cover||p?.image||photos.find(x=>x.url)?.url||'',
+  price:p?.price||'',
+  photos
+ };
+}
+
+function normalizeDonateCategory(d){
+ const items=Array.isArray(d?.items)?d.items:[];
+ const images=Array.isArray(d?.images)?d.images:[];
+ const rawProducts=Array.isArray(d?.products)?d.products:[];
+ const rawPhotos=Array.isArray(d?.photos)?d.photos:[];
+ let products=rawProducts.map((p,i)=>normalizeDonateProduct(p,i));
+ if(products.length===0 && rawPhotos.length){
+  products=rawPhotos.map((p,i)=>normalizeDonateProduct({name:p.title||('Ürün '+(i+1)),cover:p.url,photos:[p]},i));
+ }
+ if(products.length===0 && images.filter(Boolean).length){
+  products=images.filter(Boolean).map((url,i)=>normalizeDonateProduct({name:items[i]||('Ürün '+(i+1)),cover:url,photos:[{title:items[i]||('Ürün '+(i+1)),url}]},i));
+ }
+ const photos=rawPhotos.length
+  ? rawPhotos
+  : products.flatMap(p=>p.photos||[]);
+ return {
+  id:d?.id,
+  type:d?.type||'Yeni Kategori',
+  desc:d?.desc||'Bu kategorideki özel donate ürünleri.',
+  cover:d?.cover||products.find(p=>p.cover)?.cover||photos.find(p=>p.url)?.url||images.find(Boolean)||'',
   items,
   images,
   products,
@@ -342,9 +363,20 @@ function CharactersPage({setPage,openLogin}) {
 function GamePage({setPage,openLogin}) { const [s,setS]=useState(null); return <div className="inner"><Header setPage={setPage} openLogin={openLogin}/><main><Title k="MİNİ OYUN" t="Karakter Oyunu" p="Kader puanını belirle."/><Card className="game"><Gamepad2/><h2>{s??'?'}</h2><Button onClick={()=>setS(Math.ceil(Math.random()*100))}>Zar At</Button></Card></main></div> }
 
 function MarketPage({setPage,openLogin,donate}) {
- const [selected,setSelected]=useState(null);
+ const [selectedCategory,setSelectedCategory]=useState(null);
+ const [selectedProduct,setSelectedProduct]=useState(null);
  const [sliderIndex,setSliderIndex]=useState(0);
  const market=(Array.isArray(donate)?donate:[]).map(normalizeDonateCategory);
+
+ function openCategory(cat){
+  setSelectedCategory(cat);
+  setSelectedProduct(null);
+  setSliderIndex(0);
+ }
+ function openProduct(product){
+  setSelectedProduct(product);
+  setSliderIndex(0);
+ }
 
  return <div className="inner donateLuxuryPage"><Header setPage={setPage} openLogin={openLogin}/><main>
   <section className="donateLuxuryHero">
@@ -365,7 +397,7 @@ Tüm satın alımlar Discord üzerinden güvenli şekilde gerçekleştirilmekted
    <Card className="donateLuxuryInfo">
     <Crown size={40}/>
     <h2>Premium İçerikler</h2>
-    <p>Şehrin en prestijli içeriklerine erişmek için kategorileri inceleyebilir ve Discord üzerinden satın alım gerçekleştirebilirsin.</p>
+    <p>Kategorileri incele, kategori içine gir ve ürün kartlarındaki fotoğrafları görüntüle.</p>
    </Card>
   </section>
 
@@ -374,7 +406,7 @@ Tüm satın alımlar Discord üzerinden güvenli şekilde gerçekleştirilmekted
    <p>Admin {'>'} Donate Market bölümünden kategori ekleyince burada görünecek.</p>
   </Card> : <section className="donateLuxuryGrid">
    {market.map((d,i)=>{
-    const cover=d.cover || d.photos?.[0]?.url;
+    const cover=d.cover || d.products?.[0]?.cover || d.photos?.[0]?.url;
     return <Card className="donateLuxuryCard" key={(d.id||d.type)+i}>
      <div className="donateLuxuryImg">
       {cover ? <img src={cover} alt={d.type}/> : <ShoppingCart size={38}/>} 
@@ -383,55 +415,76 @@ Tüm satın alımlar Discord üzerinden güvenli şekilde gerçekleştirilmekted
       <small>DONATE KATEGORİ</small>
       <h2>{d.type}</h2>
       <p>{d.desc}</p>
-      <Button onClick={()=>{setSelected(d);setSliderIndex(0)}}>Ürünleri Görüntüle</Button>
+      <b>{(d.products||[]).length} ürün</b>
+      <Button onClick={()=>openCategory(d)}>Kategoriye Gir</Button>
      </div>
     </Card>
    })}
   </section>}
 
-  {selected && <div className="donatePhotoOverlay">
-   <Card className="donatePhotoModal">
+  {selectedCategory && <div className="donatePhotoOverlay">
+   <Card className="donatePhotoModal donateCategoryModal">
     <div className="donatePhotoHead">
      <div>
-      <span>DONATE FOTOĞRAFLARI</span>
-      <h2>{selected.type}</h2>
-      <p></p>
+      <span>DONATE KATEGORİSİ</span>
+      <h2>{selectedCategory.type}</h2>
+      <p>{selectedCategory.desc}</p>
      </div>
-     <button className="donateClose" onClick={()=>setSelected(null)}>×</button>
+     <button className="donateClose" onClick={()=>{setSelectedCategory(null);setSelectedProduct(null)}}>×</button>
     </div>
 
-    {(selected.photos||[]).length>0 ? <div className="donateSliderWrap">
+    {!selectedProduct && <>
+     {(selectedCategory.products||[]).length===0 ? <Card className="donateNoPhoto">
+      <ShoppingCart size={38}/>
+      <h3>Bu kategoride ürün yok</h3>
+      <p>Admin panelden bu kategoriye ürün kartı ekleyebilirsin.</p>
+     </Card> : <div className="donateProductGrid">
+      {(selectedCategory.products||[]).map((product,i)=><Card className="donateProductCard" key={(product.id||product.name)+i}>
+       <div className="donateProductPhoto">
+        {product.cover ? <img src={product.cover} alt={product.name}/> : <ShoppingCart size={34}/>} 
+       </div>
+       <div className="donateProductText">
+        <small>{selectedCategory.type}</small>
+        <h3>{product.name}</h3>
+        <p>{product.desc}</p>
+        {product.price&&<b>{product.price}</b>}
+        <Button className="full" onClick={()=>openProduct(product)}>Fotoğrafları Görüntüle</Button>
+       </div>
+      </Card>)}
+     </div>}
+    </>}
+
+    {selectedProduct && <div className="donateSliderWrap">
      {(()=>{
-      const list=selected.photos||[];
-      const current=list[sliderIndex%list.length]||list[0];
+      const list=selectedProduct.photos||[];
+      const current=list[sliderIndex%Math.max(list.length,1)]||list[0];
       const next=()=>setSliderIndex((sliderIndex+1)%list.length);
       const prev=()=>setSliderIndex(sliderIndex===0?list.length-1:sliderIndex-1);
       return <div className="donateSliderPanel">
-       <div className="donateSliderImageBox">
-        <img src={current.url} alt={current.title||selected.type}/>
-        {list.length>1&&<>
-         <button type="button" className="donateSlideArrow left" onClick={prev}>‹</button>
-         <button type="button" className="donateSlideArrow right" onClick={next}>›</button>
-        </>}
-        <div className="donateSlideCounter">{sliderIndex+1} / {list.length}</div>
-       </div>
-       <div className="donateSliderInfo">
-        <small>{selected.type}</small>
-        <h3>{current.title||('Fotoğraf '+(sliderIndex+1))}</h3>
-        <p>Fotoğrafları sağ ve sol oklarla gezebilirsin.</p>
-       </div>
-       <div className="donateSliderThumbs">
-        {list.map((p,i)=><button type="button" className={i===sliderIndex?'active':''} key={(p.url||'foto')+i} onClick={()=>setSliderIndex(i)}>
-         <img src={p.url} alt={p.title||selected.type}/>
-        </button>)}
-       </div>
+       <div className="donateSliderTopActions"><Button variant="ghost" onClick={()=>{setSelectedProduct(null);setSliderIndex(0)}}>← Ürünlere Dön</Button></div>
+       {list.length>0 ? <>
+        <div className="donateSliderImageBox">
+         <img src={current.url} alt={current.title||selectedProduct.name}/>
+         {list.length>1&&<>
+          <button type="button" className="donateSlideArrow left" onClick={prev}>‹</button>
+          <button type="button" className="donateSlideArrow right" onClick={next}>›</button>
+         </>}
+         <div className="donateSlideCounter">{sliderIndex+1} / {list.length}</div>
+        </div>
+        <div className="donateSliderInfo">
+         <small>{selectedCategory.type}</small>
+         <h3>{selectedProduct.name}</h3>
+         <p>{current.title||selectedProduct.desc||'Fotoğrafları sağ ve sol oklarla gezebilirsin.'}</p>
+        </div>
+        <div className="donateSliderThumbs">
+         {list.map((p,i)=><button type="button" className={i===sliderIndex?'active':''} key={(p.url||'foto')+i} onClick={()=>setSliderIndex(i)}>
+          <img src={p.url} alt={p.title||selectedProduct.name}/>
+         </button>)}
+        </div>
+       </> : <Card className="donateNoPhoto"><h3>Fotoğraf eklenmedi</h3><p>Admin bu ürüne fotoğraf ekleyince burada görünür.</p></Card>}
       </div>
      })()}
-    </div> : <Card className="donateNoPhoto">
-      <ShoppingCart size={38}/>
-      <h3>Fotoğraf eklenmedi</h3>
-      <p>Admin bu kategoriye fotoğraf ekleyince burada görünecek.</p>
-     </Card>}
+    </div>}
    </Card>
   </div>}
  </main></div>
@@ -464,7 +517,6 @@ function LoginPage({setPage,mode,setMode,auth,setAuth,loginAdmin,loginPlayer,reg
 function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,punishments,setPunishments,setLogs,announcements}) {
  const [active,setActive]=useState('Destek Aç');
  const [ticket,setTicket]=useState({type:'Oyuncu Şikayet',title:'',description:'',proof:''});
- const [banAppeal,setBanAppeal]=useState({charName:'',banReason:'',banDate:'',banAdmin:'',explanation:'',proof:''});
  const [replyText,setReplyText]=useState('');
  const [app,setApp]=useState({name:player.username||'',age:'',experience:'',reason:''});
  const myTickets=tickets.filter(t=>String(t.discordId)===String(player.discordId));
@@ -502,39 +554,14 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
  }
 
  async function closePlayerTicket(id){
-  if(!window.confirm('Bu destek kapatılsın mı?')) return;
+  if(!window.confirm('Bu ticket kapatılsın mı?')) return;
   const t=tickets.find(x=>String(x.id)===String(id));
   const ticketId=t?.dbId||id;
   const { error } = await supabase.from('tickets').update({state:'Kapalı'}).eq('id', ticketId);
-  if(error) return alert('Destek kapatma hatası: '+error.message);
+  if(error) return alert('Ticket kapatma hatası: '+error.message);
   setTickets(prev=>prev.map(x=>String(x.id)===String(id)?{...x,state:'Kapalı'}:x));
   setLogs(p=>[now()+' - oyuncu ticket kapattı: '+id,...p]);
   await addDbLog('TICKET_CLOSE_PLAYER', `${id} oyuncu tarafından kapatıldı.`, player.username);
- }
-
- async function sendBanAppeal() {
-  if(!banAppeal.charName.trim()||!banAppeal.banReason.trim()||!banAppeal.explanation.trim()) return alert('Karakter adı, ban sebebi ve itiraz açıklaması gerekli.');
-  const title=`Ban İtiraz Başvurusu - ${banAppeal.charName}`;
-  const description=[
-    `Karakter Adı: ${banAppeal.charName}`,
-    `Ban Sebebi: ${banAppeal.banReason}`,
-    `Ban Tarihi: ${banAppeal.banDate||'Belirtilmedi'}`,
-    `Banlayan Yetkili: ${banAppeal.banAdmin||'Belirtilmedi'}`,
-    '',
-    `İtiraz Açıklaması: ${banAppeal.explanation}`
-  ].join('\n');
-  const { data, error } = await supabase.from('tickets').insert({
-    username:player.username, discord_id:player.discordId, type:'Ban İtiraz Başvurusu', title,
-    description, proof:banAppeal.proof||'', state:'Açık', assigned:'Boşta'
-  }).select().single();
-  if(error) return alert('Ban itiraz başvurusu hatası: '+error.message);
-  await supabase.from('ticket_messages').insert({ticket_id:data.id, sender:player.username, role:'Oyuncu', message:description});
-  const item=dbTicketToApp({...data,ticket_messages:[{sender:player.username,role:'Oyuncu',message:description,created_at:new Date().toISOString()}]});
-  setTickets(p=>[item,...p]);
-  setLogs(p=>[now()+' - ban itiraz başvurusu açıldı: '+item.id,...p]);
-  await addDbLog('BAN_APPEAL_CREATE', `${player.username} ban itiraz başvurusu gönderdi: ${banAppeal.charName}`, player.username);
-  setBanAppeal({charName:'',banReason:'',banDate:'',banAdmin:'',explanation:'',proof:''});
-  setActive('Taleplerim');
  }
 
  async function sendApp() {
@@ -551,7 +578,7 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
   await addDbLog('APPLICATION_CREATE', `${player.username} başvuru gönderdi.`, player.username);
  }
 
- const menu=['Duyurular','Destek Aç','Ban İtiraz Başvurusu','Taleplerim','Kapanan Destekler','Yetkili Başvuru','Profilim'];
+ const menu=['Duyurular','Destek Aç','Taleplerim','Kapanan Ticketlar','Yetkili Başvuru','Profilim'];
  return <div className="adminLayout playerLayout cleanPlayerPanel">
   <aside>
    <Logo/>
@@ -564,13 +591,11 @@ function PlayerPanel({player,setPlayer,setPage,tickets,setTickets,apps,setApps,p
 
    {active==='Duyurular'&&<Card className="panel announcementBox"><h2><Bell size={18}/> Duyuru Kanalı</h2>{(!announcements||announcements.length===0)&&<p>Henüz duyuru yok.</p>}{(announcements||[]).map(a=><div className="announcementItem" key={a.id}><h3>{a.title}</h3><p>{a.content}</p><small>{a.createdAt}</small></div>)}</Card>}
 
-   {active==='Destek Aç'&&<Card className="panel"><h2>Destek Talebi Aç</h2><p>Ban itirazları artık ayrı başvuru formundan alınır. AC/OCEAN hile konuları için AC Destek seç.</p><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>WL İtiraz</option><option>AC Destek (OCEAN Hile)</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
+   {active==='Destek Aç'&&<Card className="panel"><h2>Destek Talebi Aç</h2><select className="field" value={ticket.type} onChange={e=>setTicket({...ticket,type:e.target.value})}><option>Oyuncu Şikayet</option><option>Yetkili Şikayet</option><option>Ban İtiraz</option><option>WL İtiraz</option><option>Teknik Destek</option><option>Donate Destek</option></select><Field value={ticket.title} onChange={v=>setTicket({...ticket,title:v})} placeholder="Başlık"/><TextArea value={ticket.description} onChange={v=>setTicket({...ticket,description:v})} placeholder="Yetkililere yazacağın mesaj / açıklama"/><Field value={ticket.proof} onChange={v=>setTicket({...ticket,proof:v})} placeholder="Kanıt linki"/><Button onClick={addTicket}><Send size={16}/> Destek Gönder</Button></Card>}
 
-   {active==='Ban İtiraz Başvurusu'&&<Card className="panel"><h2>Ban İtiraz Başvurusu</h2><p>Bu form normal destekten ayrıdır. Yetkililer başvurunu destek panelinde Ban İtiraz Başvurusu olarak görür.</p><div className="grid3"><Field value={banAppeal.charName} onChange={v=>setBanAppeal({...banAppeal,charName:v})} placeholder="Karakter adı"/><Field value={banAppeal.banReason} onChange={v=>setBanAppeal({...banAppeal,banReason:v})} placeholder="Ban sebebi"/><Field value={banAppeal.banDate} onChange={v=>setBanAppeal({...banAppeal,banDate:v})} placeholder="Ban tarihi"/></div><Field value={banAppeal.banAdmin} onChange={v=>setBanAppeal({...banAppeal,banAdmin:v})} placeholder="Banlayan yetkili / bilmiyorsan boş bırak"/><TextArea value={banAppeal.explanation} onChange={v=>setBanAppeal({...banAppeal,explanation:v})} placeholder="Neden banının kaldırılması gerektiğini detaylı yaz"/><Field value={banAppeal.proof} onChange={v=>setBanAppeal({...banAppeal,proof:v})} placeholder="Kanıt linki / video / ekran görüntüsü"/><Button onClick={sendBanAppeal}><Send size={16}/> Ban İtiraz Başvurusu Gönder</Button></Card>}
+   {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Ticket Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
 
-   {active==='Taleplerim'&&<Card className="panel"><h2>Aktif Destek Taleplerim</h2>{myOpenTickets.length===0&&<p>Aktif destek talebin yok.</p>}{myOpenTickets.map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.state} • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><div className="actions"><Badge>{t.state}</Badge><Button variant="ghost" onClick={()=>closePlayerTicket(t.id)}>Destek Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={replyText} onChange={setReplyText} placeholder="Yetkiliye mesaj yaz..."/><Button onClick={()=>addTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
-
-   {active==='Kapanan Destekler'&&<Card className="panel"><h2>Kapanan Destekler</h2>{myClosedTickets.length===0&&<p>Kapanan destek yok.</p>}{myClosedTickets.map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • Kapalı • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
+   {active==='Kapanan Ticketlar'&&<Card className="panel"><h2>Kapanan Ticketlar</h2>{myClosedTickets.length===0&&<p>Kapanan ticket yok.</p>}{myClosedTickets.map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • Kapalı • Yetkili: {t.assigned}</p><small>{t.createdAt}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
 
    {active==='Yetkili Başvuru'&&<Card className="panel"><h2>Yetkili Başvurusu</h2>{myApp&&<Badge tone="note">Başvuru durumun: {myApp.status}</Badge>}<Field value={app.name} onChange={v=>setApp({...app,name:v})} placeholder="Ad Soyad"/><Field value={app.age} onChange={v=>setApp({...app,age:v})} placeholder="Yaş"/><TextArea value={app.experience} onChange={v=>setApp({...app,experience:v})} placeholder="Yetkili deneyimin"/><TextArea value={app.reason} onChange={v=>setApp({...app,reason:v})} placeholder="Neden yetkili olmak istiyorsun?"/><Button disabled={!!myApp} onClick={sendApp}>Başvuru Gönder</Button></Card>}
 
@@ -588,7 +613,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  const [editDonate,setEditDonate]=useState(null);
  const [punish,setPunish]=useState({targetType:'Oyuncu',targetId:'',targetName:'',rule:'',penalty:'',proof:'',note:'',removeWL:true});
  const rank=staffRanks.find(r=>r.rank===newAdmin.role)||staffRanks[0];
- const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Destekler','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
+ const menu=['Dashboard','Oyuncular','Yetkililer','Yönetim Kadrosu','Founder Panel','Duyurular','Destekler','Kapanan Ticketlar','Başvurular','Ceza Ver','WL Takip','Ceza Kayıtları','Kurallar','Donate Market','Loglar'];
 
  async function addAdmin(){
  if(!newAdmin.username||!newAdmin.discordId||!newAdmin.password)return alert('Tüm alanları doldur');
@@ -624,25 +649,32 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
  async function saveDonate(){
  if(!editDonate?.type?.trim()) return alert('Kategori ismi gerekli.');
  const clean=normalizeDonateCategory(editDonate);
- const photos=(clean.photos||[])
-  .filter(p=>String(p.url||'').trim())
-  .map(p=>({title:p.title||'',url:p.url||''}));
+ const products=(clean.products||[]).map((p,i)=>({
+  id:p.id||Date.now()+i,
+  name:p.name||('Ürün '+(i+1)),
+  desc:p.desc||'',
+  cover:p.cover||p.photos?.find(x=>x.url)?.url||'',
+  price:p.price||'',
+  photos:(Array.isArray(p.photos)?p.photos:[]).filter(x=>String(x.url||'').trim()).map(x=>({title:x.title||'',url:x.url||''}))
+ }));
+ const photos=products.flatMap(p=>p.photos||[]);
  const payload={
   type:clean.type,
   desc:clean.desc||'',
-  cover:clean.cover||photos[0]?.url||'',
+  cover:clean.cover||products.find(p=>p.cover)?.cover||photos[0]?.url||'',
+  products,
   photos,
-  items:photos.map(p=>p.title||'Donate Fotoğraf'),
-  images:photos.slice(0,4).map(p=>p.url)
+  items:products.map(p=>p.name||'Donate Ürün'),
+  images:products.map(p=>p.cover).filter(Boolean).slice(0,4)
  };
  let saved;
  if(clean.id){
   const {data,error}=await supabase.from('donate_categories').update(payload).eq('id',clean.id).select().single();
-  if(error) return alert('Donate kayıt hatası: '+error.message);
+  if(error) return alert('Donate kayıt hatası: '+error.message+' | Supabase donate_categories tablosunda products JSONB kolonu yoksa eklemelisin.');
   saved=normalizeDonateCategory(data||{...clean,...payload});
  }else{
   const {data,error}=await supabase.from('donate_categories').insert(payload).select().single();
-  if(error) return alert('Donate kayıt hatası: '+error.message);
+  if(error) return alert('Donate kayıt hatası: '+error.message+' | Supabase donate_categories tablosunda products JSONB kolonu yoksa eklemelisin.');
   saved=normalizeDonateCategory(data||payload);
  }
  setDonate(prev=>{
@@ -711,7 +743,7 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 
   {active==='Destekler'&&<Card className="panel"><h2>Aktif Destek Yönetimi</h2>{tickets.filter(t=>t.state!=='Kapalı').length===0&&<p>Aktif destek yok.</p>}{tickets.filter(t=>t.state!=='Kapalı').map(t=><div className="ticketThread compactTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • {t.state} • {t.assigned}</p><small>{t.description}</small></div><div className="actions"><Button onClick={()=>assignTicket(t.id)}>Üstlen</Button><Button variant="ghost" onClick={()=>closeTicket(t.id)}>Kapat</Button></div></div><div className="ticketMessages compactMessages">{(t.messages||[{by:t.username,role:'Oyuncu',text:t.description,time:t.createdAt}]).map((m,i)=><div className={`ticketMsg ${m.role==='Yetkili'?'staffMsg':'playerMsg'}`} key={i}><b>{m.by} • {m.role}</b><p>{m.text}</p><small>{m.time}</small></div>)}</div><div className="ticketReply"><Field value={staffReply} onChange={setStaffReply} placeholder="Oyuncuya mesaj yaz..."/><Button onClick={()=>addAdminTicketReply(t.id)}>Mesaj Gönder</Button></div></div>)}</Card>}
 
-  {active==='Kapanan Destekler'&&<Card className="panel"><h2>Kapanan Destekler</h2>{tickets.filter(t=>t.state==='Kapalı').length===0&&<p>Kapanan destek yok.</p>}{tickets.filter(t=>t.state==='Kapalı').map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • Kapalı • {t.assigned}</p><small>{t.description}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
+  {active==='Kapanan Ticketlar'&&<Card className="panel"><h2>Kapanan Ticketlar</h2>{tickets.filter(t=>t.state==='Kapalı').length===0&&<p>Kapanan ticket yok.</p>}{tickets.filter(t=>t.state==='Kapalı').map(t=><div className="ticketThread compactTicket closedTicket" key={t.id}><div className="row"><div><b>{t.id} • {t.title}</b><p>{t.type} • {t.username} • Kapalı • {t.assigned}</p><small>{t.description}</small></div><Badge tone="bad">Kapalı</Badge></div></div>)}</Card>}
   {active==='Başvurular'&&<Card className="panel"><h2>Yetkili Başvuruları</h2>{apps.length===0&&<p>Başvuru yok.</p>}{apps.map((a,i)=><div className="row" key={a.discordId+i}><div><b>{a.name||a.username}</b><p>{a.discordId} • {a.status}</p><small>{a.reason}</small></div><div className="actions"><Button onClick={()=>appResult(i,'Kabul Edildi')}>Kabul</Button><Button variant="ghost" onClick={()=>appResult(i,'Reddedildi')}>Reddet</Button></div></div>)}</Card>}
   {active==='Ceza Ver'&&<Card className="panel"><h2>Oyuncu / Yetkili Ceza Ver ve WL Al</h2><div className="grid3"><select className="field" value={punish.targetType} onChange={e=>setPunish({...punish,targetType:e.target.value})}><option>Oyuncu</option><option>Yetkili</option></select><Field value={punish.targetId} onChange={v=>setPunish({...punish,targetId:v})} placeholder="Discord ID"/><Field value={punish.targetName} onChange={v=>setPunish({...punish,targetName:v})} placeholder="İsim"/></div><div className="grid3"><select className="field" value={punish.rule} onChange={e=>{const r=rules.find(x=>x.name===e.target.value);setPunish({...punish,rule:e.target.value,penalty:r?.penalty||''})}}><option value="">Kural seç</option>{rules.map(r=><option key={r.id} value={r.name}>{r.name} - {r.penalty}</option>)}</select><Field value={punish.penalty} onChange={v=>setPunish({...punish,penalty:v})} placeholder="Ceza / WL süresi"/><Field value={punish.proof} onChange={v=>setPunish({...punish,proof:v})} placeholder="Kanıt linki"/></div><TextArea value={punish.note} onChange={v=>setPunish({...punish,note:v})} placeholder="Ceza notu"/>
 
@@ -763,10 +795,12 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
 </div></div>)}</Card>}
   {active==='Kurallar'&&<Card className="panel"><h2>Kurallar</h2>{rules.map(r=><div className="rule" key={r.id}><span>{r.id}</span><b>{r.name}</b><em>{r.category}</em><Badge tone={r.level==='Perma'?'bad':r.level==='Not'?'note':'warn'}>{r.penalty}</Badge></div>)}</Card>}
   {active==='Donate Market'&&<div className="panelStack">
-  <Card className="panel">
-   <h2>Donate Market Yönetimi</h2>
-   <p className="muted">Buradan kategori ekle, düzenle ve sil. Sitede sadece burada eklediğin kategoriler görünür.</p>
-   <Button onClick={()=>setEditDonate({type:'Yeni Kategori',desc:'Bu kategorideki özel donate ürünleri.',cover:'',items:[],images:[],photos:[]})}>Kategori Ekle</Button>
+  <Card className="panel donateAdminHero">
+   <div>
+    <h2>Donate Market Yönetimi</h2>
+    <p className="muted">Kategori ekle, düzenle, sil. Her kategorinin içine ürün kartları ekleyebilirsin. Örn: “İmzalı Araba” kategorisi içinde imzalı araba kartları.</p>
+   </div>
+   <Button onClick={()=>setEditDonate({type:'İmzalı Araba',desc:'İmzalı araba kategorisi.',cover:'',products:[],photos:[]})}>Kategori Ekle</Button>
   </Card>
 
   <div className="donateAdminGrid">
@@ -779,11 +813,11 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
       <small>KATEGORİ</small>
       <h2>{cat.type}</h2>
       <p>{cat.desc}</p>
-      <b>{(cat.photos||[]).length} fotoğraf</b>
+      <b>{(cat.products||[]).length} ürün kartı</b>
       <div className="actions">
        <Button onClick={()=>setEditDonate(cat)}>Düzenle</Button>
        <Button variant="ghost" onClick={async()=>{
-        if(!confirm(cat.type+' silinsin mi?')) return;
+        if(!confirm(cat.type+' kategorisi silinsin mi?')) return;
         if(cat.id){
          const { error } = await supabase.from('donate_categories').delete().eq('id',cat.id);
          if(error) return alert('Silme hatası: '+error.message);
@@ -806,41 +840,83 @@ function AdminPanel({admin,setAdmin,setPage,admins,setAdmins,players,setPlayers,
   <h2>Donate Kategori Düzenle</h2>
 
   <label>Kategori İsmi</label>
-  <Field value={editDonate.type||''} onChange={v=>setEditDonate({...editDonate,type:v})} placeholder="Örn: Donate Araçlar"/>
+  <Field value={editDonate.type||''} onChange={v=>setEditDonate({...editDonate,type:v})} placeholder="Örn: İmzalı Araba"/>
 
   <label>Kategori Açıklaması</label>
   <TextArea value={editDonate.desc||''} onChange={v=>setEditDonate({...editDonate,desc:v})} placeholder="Kategori açıklaması"/>
 
-  <label>Kapak Fotoğraf Linki</label>
+  <label>Kategori Kapak Fotoğraf Linki</label>
   <Field value={editDonate.cover||''} onChange={v=>setEditDonate({...editDonate,cover:v})} placeholder="https://...jpg veya /images/arac.png"/>
 
   <div className="donateEditorHead">
-   <h3>Fotoğraflar</h3>
-   <Button onClick={()=>setEditDonate({...editDonate,photos:[...(editDonate.photos||[]),{title:'Yeni Fotoğraf',url:''}]})}>Fotoğraf Ekle</Button>
+   <div>
+    <h3>Ürün Kartları</h3>
+    <p className="muted">Kategori içinde görünecek kartları buradan ekle. Her karta ayrı fotoğraf galerisi eklenir.</p>
+   </div>
+   <Button onClick={()=>setEditDonate({...editDonate,products:[...(editDonate.products||[]),{id:Date.now(),name:'Yeni Ürün',desc:'',cover:'',price:'',photos:[]}]})}>Ürün Kartı Ekle</Button>
   </div>
 
   <div className="donateProductEditorList">
-   {(editDonate.photos||[]).map((p,i)=><Card className="donateProductEditor" key={i}>
+   {(editDonate.products||[]).map((product,i)=><Card className="donateProductEditor" key={product.id||i}>
     <div className="donateProductEditorPreview">
-     {p.url?<img src={p.url} alt={p.title}/>:<Star size={26}/>} 
+     {product.cover?<img src={product.cover} alt={product.name}/>:<Star size={26}/>} 
     </div>
     <div>
-     <label>Fotoğraf Başlığı</label>
-     <Field value={p.title||''} onChange={v=>{
-      const arr=[...(editDonate.photos||[])]; arr[i]={...arr[i],title:v};
-      setEditDonate({...editDonate,photos:arr});
-     }} placeholder="Örn: BMW M5"/>
+     <label>Ürün/Kart İsmi</label>
+     <Field value={product.name||''} onChange={v=>{
+      const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],name:v};
+      setEditDonate({...editDonate,products:arr});
+     }} placeholder="Örn: BMW M5 İmzalı"/>
 
-     <label>Fotoğraf Linki</label>
-     <Field value={p.url||''} onChange={v=>{
-      const arr=[...(editDonate.photos||[])]; arr[i]={...arr[i],url:v};
-      setEditDonate({...editDonate,photos:arr});
+     <label>Açıklama</label>
+     <TextArea value={product.desc||''} onChange={v=>{
+      const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],desc:v};
+      setEditDonate({...editDonate,products:arr});
+     }} placeholder="Ürün açıklaması"/>
+
+     <label>Fiyat / Not</label>
+     <Field value={product.price||''} onChange={v=>{
+      const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],price:v};
+      setEditDonate({...editDonate,products:arr});
+     }} placeholder="Örn: Discord üzerinden fiyat al"/>
+
+     <label>Kart Kapak Fotoğrafı</label>
+     <Field value={product.cover||''} onChange={v=>{
+      const arr=[...(editDonate.products||[])]; arr[i]={...arr[i],cover:v};
+      setEditDonate({...editDonate,products:arr});
      }} placeholder="https://...jpg veya /images/arac.png"/>
 
-     <Button variant="ghost" onClick={()=>{
-      const arr=[...(editDonate.photos||[])]; arr.splice(i,1);
-      setEditDonate({...editDonate,photos:arr});
-     }}>Fotoğrafı Sil</Button>
+     <div className="donateEditorHead smallHead">
+      <h4>Fotoğraf Galerisi</h4>
+      <Button onClick={()=>{
+       const arr=[...(editDonate.products||[])];
+       const photos=[...(arr[i].photos||[]),{title:'Yeni Fotoğraf',url:''}];
+       arr[i]={...arr[i],photos};
+       setEditDonate({...editDonate,products:arr});
+      }}>Fotoğraf Ekle</Button>
+     </div>
+
+     <div className="donatePhotoEditorGrid">
+      {(product.photos||[]).map((photo,pi)=><div className="donatePhotoEditor" key={pi}>
+       <Field value={photo.title||''} onChange={v=>{
+        const arr=[...(editDonate.products||[])]; const photos=[...(arr[i].photos||[])]; photos[pi]={...photos[pi],title:v}; arr[i]={...arr[i],photos};
+        setEditDonate({...editDonate,products:arr});
+       }} placeholder="Fotoğraf başlığı"/>
+       <Field value={photo.url||''} onChange={v=>{
+        const arr=[...(editDonate.products||[])]; const photos=[...(arr[i].photos||[])]; photos[pi]={...photos[pi],url:v}; arr[i]={...arr[i],photos};
+        setEditDonate({...editDonate,products:arr});
+       }} placeholder="Fotoğraf linki"/>
+       <Button variant="ghost" onClick={()=>{
+        const arr=[...(editDonate.products||[])]; const photos=[...(arr[i].photos||[])]; photos.splice(pi,1); arr[i]={...arr[i],photos};
+        setEditDonate({...editDonate,products:arr});
+       }}>Sil</Button>
+      </div>)}
+     </div>
+
+     <Button variant="ghost" className="dangerBtn" onClick={()=>{
+      const arr=[...(editDonate.products||[])]; arr.splice(i,1);
+      setEditDonate({...editDonate,products:arr});
+     }}>Ürün Kartını Sil</Button>
     </div>
    </Card>)}
   </div>
