@@ -796,3 +796,47 @@
     height:52px!important;
   }
 }
+
+/* 4 AYRI DISCORD ROL KOMUTU PANELI */
+.commandPreviewFour{
+  margin-top:18px!important;
+}
+.commandPreviewFour>b{
+  display:block!important;
+  color:#ff1f31!important;
+  margin-bottom:12px!important;
+  font-size:16px!important;
+}
+.commandCards{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+.commandCard{
+  border:1px solid rgba(255,31,49,.28)!important;
+  border-radius:16px!important;
+  background:rgba(4,6,10,.72)!important;
+  padding:14px!important;
+}
+.commandCard small{
+  display:block!important;
+  color:#ff1f31!important;
+  font-weight:1000!important;
+  letter-spacing:.6px!important;
+  margin-bottom:8px!important;
+}
+.commandCard code{
+  display:block!important;
+  min-height:46px!important;
+  padding:12px!important;
+  border-radius:12px!important;
+  background:#080a0f!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#fff!important;
+  word-break:break-all!important;
+  white-space:normal!important;
+  margin-bottom:10px!important;
+}
+@media(max-width:850px){
+  .commandCards{grid-template-columns:1fr!important}
+}
