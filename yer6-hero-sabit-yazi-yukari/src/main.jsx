@@ -111,11 +111,12 @@ const staffRanksDefault = [
  { level: 15, rank: "Head Admin" },
  { level: 16, rank: "Senior Manager" },
  { level: 17, rank: "Head Manager" },
- { level: 18, rank: "Head Master" },
- { level: 19, rank: "Web Developer" },
- { level: 20, rank: "Head Of Management" },
- { level: 21, rank: "Co-Founder" },
- { level: 22, rank: "Founder" }
+ { level: 18, rank: "Management" },
+ { level: 19, rank: "Head Master" },
+ { level: 20, rank: "Web Developer" },
+ { level: 21, rank: "Head Of Management" },
+ { level: 22, rank: "Co-Founder" },
+ { level: 23, rank: "Founder" }
 ];
 
 const staffMembersDefault = [
@@ -189,11 +190,12 @@ function normalizeDonateCategory(d){
 }
 
 const staffRankOrder = {
-  "Founder": 22,
-  "Co-Founder": 21,
-  "Head Of Management": 20,
-  "Web Developer": 19,
-  "Head Master": 18,
+  "Founder": 23,
+  "Co-Founder": 22,
+  "Head Of Management": 21,
+  "Web Developer": 20,
+  "Head Master": 19,
+  "Management": 18
   "Head Manager": 17,
   "Senior Manager": 16,
   "Head Admin": 15,
