@@ -312,7 +312,7 @@ function RulesPage({setPage,openLogin}) {
 function StaffPage({setPage,openLogin,staffMembers}) {
  const sortedStaff = sortStaffByRank(staffMembers);
  return <div className="inner"><Header setPage={setPage} openLogin={openLogin}/><main>
-  <Title k="YÖNETİM" t="Yönetim Kadrosu" p="Sunucudaki aktif yetkililer seviye sırasına göre listelenir."/>
+  <Title k="YÖNETİM" t="Yönetim Kadrosu" p=""/>
   <div className="staffGrid">
    {sortedStaff.length===0&&<Card className="panel"><h2>Henüz kadro eklenmedi</h2><p>Admin panelden kadro ekleyebilirsin.</p></Card>}
    {sortedStaff.map((m,i)=><Card className="staffCard" key={m.discordId+i}>
@@ -345,18 +345,18 @@ function MarketPage({setPage,openLogin,donate}) {
    <div>
     <span>YER6 DONATE MARKET</span>
     <h1>Donate Market</h1>
-    <p>Bu alanda sadece admin panelden eklenen kategoriler ve fotoğraflar görünür.</p>
+    <p></p>
    </div>
    <Card className="donateLuxuryInfo">
     <Crown size={40}/>
-    <h2>Admin Kontrollü</h2>
-    <p>Kategori ve fotoğrafları admin panelden ekleyip silebilirsin.</p>
+    <h2>Premium İçerikler</h2>
+    <p>Şehrin en prestijli içeriklerine erişmek için kategorileri inceleyebilir ve Discord üzerinden satın alım gerçekleştirebilirsin.</p>
    </Card>
   </section>
 
   {market.length===0 ? <Card className="panel emptyDonateMarket">
    <h2>Donate kategorisi yok</h2>
-   <p>Admin Panel {'>'} Donate Market bölümünden kategori ekleyince burada görünecek.</p>
+   <p>Admin {'>'} Donate Market bölümünden kategori ekleyince burada görünecek.</p>
   </Card> : <section className="donateLuxuryGrid">
    {market.map((d,i)=>{
     const cover=d.cover || d.photos?.[0]?.url;
@@ -380,7 +380,7 @@ function MarketPage({setPage,openLogin,donate}) {
      <div>
       <span>DONATE FOTOĞRAFLARI</span>
       <h2>{selected.type}</h2>
-      <p>Sadece admin panelden eklenen fotoğraflar görünür.</p>
+      <p></p>
      </div>
      <button className="donateClose" onClick={()=>setSelected(null)}>×</button>
     </div>
@@ -415,7 +415,7 @@ function MarketPage({setPage,openLogin,donate}) {
     </div> : <Card className="donateNoPhoto">
       <ShoppingCart size={38}/>
       <h3>Fotoğraf eklenmedi</h3>
-      <p>Admin panelden bu kategoriye fotoğraf ekleyince burada görünecek.</p>
+      <p>Admin bu kategoriye fotoğraf ekleyince burada görünecek.</p>
      </Card>}
    </Card>
   </div>}
